@@ -17,7 +17,6 @@ jobs:
       TF_VAR_server_name: ${{ secrets.SERVER_NAME }}
       TF_VAR_world_name: ${{ secrets.WORLD_NAME }}
       TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
