@@ -7,3 +7,8 @@ output "volume_device" {
   description = "Block device path for the world volume"
   value       = hcloud_volume.world.linux_device
 }
+
+output "hostname" {
+  description = "Valheim server hostname"
+  value       = cloudflare_record.valheim.hostname
+}

@@ -43,12 +43,13 @@ jobs:
       - name: Write job summary
         run: |
           IP=$(terraform output -raw server_ip)
+          HOST=$(terraform output -raw hostname)
           echo "## One Eye's Keep — Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| **Server IP** | \`$IP\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Hostname** | \`valheim.redmist.online\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Connect** | \`valheim.redmist.online:2456\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Hostname** | \`$HOST\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Connect** | \`$HOST:2456\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> Server may take 3–5 minutes to finish initializing." >> $GITHUB_STEP_SUMMARY
