@@ -50,9 +50,8 @@ write_files:
             BACKUPS: "false"
             UPDATE_CRON: "0 4 * * *"
             IDLE_DATAGRAM_MAX_COUNT: "0"
-            SERVER_LISTENING_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"One Eyes Keep is online! Connect now.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
-            PRE_STOP_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"One Eyes Keep is going offline.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
-            POST_UPDATE_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"One Eyes Keep has been updated and is restarting.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
+            POST_SERVER_LISTENING_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"One Eyes Keep is online! Connect now.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
+            PRE_SERVER_SHUTDOWN_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"One Eyes Keep is going offline.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
           volumes:
             - /mnt/valheim-world:/config
           cap_add:
