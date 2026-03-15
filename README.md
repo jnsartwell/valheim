@@ -80,4 +80,17 @@ Backups run automatically every 6 hours to `/mnt/valheim-world/backups/`, keepin
 
 Players connect via: `valheim.redmist.online:2456`
 
+The server is public and appears in the in-game server browser. Search for the server name or connect directly using the hostname above.
+
 The DNS record updates automatically on every deploy — no need to share a new IP.
+
+## Discord notifications
+
+The server posts to a Discord channel on key events:
+
+| Event | Message |
+|---|---|
+| Server ready | "One Eyes Keep is online! Connect now." |
+| Server stopping | "One Eyes Keep is going offline." |
+
+Set the `DISCORD_WEBHOOK_URL` GitHub secret to enable. Create a webhook in Discord under Server Settings → Integrations → Webhooks.
