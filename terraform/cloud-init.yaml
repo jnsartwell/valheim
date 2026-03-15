@@ -57,6 +57,8 @@ write_files:
             SERVER_PASS: $${SERVER_PASS}
             SERVER_PUBLIC: $${SERVER_PUBLIC:-false}
             BACKUPS: "false"
+            UPDATE_CRON: "0 4 * * *"
+            IDLE_DATAGRAM_MAX_COUNT: "0"
           volumes:
             - /mnt/valheim-world:/config
           cap_add:
