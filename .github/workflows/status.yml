@@ -1,0 +1,47 @@
+name: Server Status
+
+on:
+  workflow_dispatch:
+
+jobs:
+  status:
+    name: Check Server Status
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get server info
+        id: server
+        run: |
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.HCLOUD_TOKEN }}" \
+            "https://api.hetzner.cloud/v1/servers?name=valheim")
+          echo "ip=$(echo $RESPONSE | jq -r '.servers[0].public_net.ipv4.ip')" >> $GITHUB_OUTPUT
+          echo "status=$(echo $RESPONSE | jq -r '.servers[0].status')" >> $GITHUB_OUTPUT
+          echo "type=$(echo $RESPONSE | jq -r '.servers[0].server_type.name')" >> $GITHUB_OUTPUT
+          echo "datacenter=$(echo $RESPONSE | jq -r '.servers[0].datacenter.location.name')" >> $GITHUB_OUTPUT
+
+      - name: Report Hetzner status
+        run: |
+          echo "=== Hetzner Server ==="
+          echo "Status:     ${{ steps.server.outputs.status }}"
+          echo "IP:         ${{ steps.server.outputs.ip }}"
+          echo "Type:       ${{ steps.server.outputs.type }}"
+          echo "Datacenter: ${{ steps.server.outputs.datacenter }}"
+
+      - name: Setup SSH
+        if: steps.server.outputs.status == 'running'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ steps.server.outputs.ip }} >> ~/.ssh/known_hosts
+
+      - name: Check container status
+        if: steps.server.outputs.status == 'running'
+        run: |
+          echo ""
+          echo "=== Valheim Container ==="
+          ssh root@${{ steps.server.outputs.ip }} "
+            docker ps -a --filter name=valheim --format 'Status: {{.Status}}'
+            echo 'Uptime:' \$(uptime -p)
+            echo 'Memory:' \$(free -h | awk '/Mem:/ {print \$3 \" used / \" \$2 \" total\"}')
+          "

@@ -1,0 +1,44 @@
+name: Stop Valheim Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stop:
+    name: Graceful Stop + Power Off
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get server info
+        id: server
+        run: |
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.HCLOUD_TOKEN }}" \
+            "https://api.hetzner.cloud/v1/servers?name=valheim")
+          echo "id=$(echo $RESPONSE | jq -r '.servers[0].id')" >> $GITHUB_OUTPUT
+          echo "ip=$(echo $RESPONSE | jq -r '.servers[0].public_net.ipv4.ip')" >> $GITHUB_OUTPUT
+          echo "status=$(echo $RESPONSE | jq -r '.servers[0].status')" >> $GITHUB_OUTPUT
+
+      - name: Check server is running
+        run: |
+          if [ "${{ steps.server.outputs.status }}" != "running" ]; then
+            echo "Server is not running (status: ${{ steps.server.outputs.status }})"
+            exit 1
+          fi
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ steps.server.outputs.ip }} >> ~/.ssh/known_hosts
+
+      - name: Gracefully stop Valheim container
+        run: |
+          ssh root@${{ steps.server.outputs.ip }} "/opt/valheim/scripts/stop.sh"
+
+      - name: Power off server
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HCLOUD_TOKEN }}" \
+            "https://api.hetzner.cloud/v1/servers/${{ steps.server.outputs.id }}/actions/poweroff"
+          echo "Server powered off."
