@@ -44,6 +44,10 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ steps.server_ip.outputs.ip }} >> ~/.ssh/known_hosts
 
+      - name: Trigger backup on server
+        run: |
+          ssh root@${{ steps.server_ip.outputs.ip }} "/opt/valheim/scripts/backup.sh"
+
       - name: Download latest backup
         run: |
           LATEST=$(ssh root@${{ steps.server_ip.outputs.ip }} \
