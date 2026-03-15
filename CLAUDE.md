@@ -41,6 +41,11 @@ The volume (`valheim-world`) persists the world save across server recreate cycl
 | `WORLD_NAME` | World save file name |
 | `SERVER_PASS` | Server password (min 5 chars) |
 | `DISCORD_WEBHOOK_URL` | Discord channel webhook for server notifications |
+| `CLOUDFLARE_API_TOKEN` | Edit zone DNS permissions scoped to the domain zone |
+
+## DNS (Cloudflare)
+
+Terraform manages a `cloudflare_record` A resource pointing `valheim.redmist.online` at the server IP. The record must be **DNS only (proxied = false)** — Valheim uses UDP and Cloudflare's proxy only handles HTTP/HTTPS. The Zone ID is hardcoded as a variable default in `variables.tf`. The `hostname` Terraform output returns the full hostname derived from the record resource.
 
 ## Discord notifications
 
