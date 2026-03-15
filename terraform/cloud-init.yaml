@@ -1,0 +1,117 @@
+#cloud-config
+
+runcmd:
+  # Mount world volume
+  - mkdir -p /mnt/valheim-world
+  - mount ${volume_device} /mnt/valheim-world
+  - echo "${volume_device} /mnt/valheim-world ext4 defaults,nofail 0 2" >> /etc/fstab
+
+  # Install scripts
+  - mkdir -p /opt/valheim/scripts /opt/valheim/docker
+  - cp /var/lib/cloud/instance/scripts/backup.sh /opt/valheim/scripts/backup.sh
+  - cp /var/lib/cloud/instance/scripts/start.sh /opt/valheim/scripts/start.sh
+  - cp /var/lib/cloud/instance/scripts/stop.sh /opt/valheim/scripts/stop.sh
+  - chmod +x /opt/valheim/scripts/backup.sh /opt/valheim/scripts/start.sh /opt/valheim/scripts/stop.sh
+  - cp /var/lib/cloud/instance/scripts/compose.yaml /opt/valheim/docker/compose.yaml
+
+  # Install and enable backup timer
+  - cp /var/lib/cloud/instance/scripts/valheim-backup.service /etc/systemd/system/valheim-backup.service
+  - cp /var/lib/cloud/instance/scripts/valheim-backup.timer /etc/systemd/system/valheim-backup.timer
+  - systemctl daemon-reload
+  - systemctl enable --now valheim-backup.timer
+
+  # Start Valheim
+  - docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env up -d
+
+write_files:
+  - path: /opt/valheim/docker/.env
+    permissions: "0600"
+    content: |
+      SERVER_NAME=${server_name}
+      WORLD_NAME=${world_name}
+      SERVER_PASS=${server_pass}
+      SERVER_PUBLIC=false
+
+  - path: /var/lib/cloud/instance/scripts/compose.yaml
+    content: |
+      services:
+        valheim:
+          image: lloesche/valheim-server
+          container_name: valheim
+          restart: unless-stopped
+          ports:
+            - "2456:2456/udp"
+            - "2457:2457/udp"
+            - "2458:2458/udp"
+          environment:
+            SERVER_NAME: $${SERVER_NAME}
+            SERVER_PORT: 2456
+            WORLD_NAME: $${WORLD_NAME}
+            SERVER_PASS: $${SERVER_PASS}
+            SERVER_PUBLIC: $${SERVER_PUBLIC:-false}
+            BACKUPS: "false"
+          volumes:
+            - /mnt/valheim-world:/config
+          cap_add:
+            - sys_nice
+          stop_grace_period: 60s
+
+  - path: /var/lib/cloud/instance/scripts/backup.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      WORLD_DIR="/mnt/valheim-world"
+      BACKUP_DIR="/mnt/valheim-world/backups"
+      RETENTION_DAYS="$${BACKUP_DAYS:-7}"
+      TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+      BACKUP_FILE="$${BACKUP_DIR}/world_$${TIMESTAMP}.tar.gz"
+      mkdir -p "$BACKUP_DIR"
+      echo "[backup] Starting world backup at $${TIMESTAMP}"
+      docker exec valheim bash -c 'kill -USR1 $(pgrep valheim_server)' 2>/dev/null || true
+      sleep 5
+      tar -czf "$BACKUP_FILE" --exclude="$${BACKUP_DIR}" -C "$WORLD_DIR" worlds_local
+      echo "[backup] Written to $${BACKUP_FILE}"
+      find "$BACKUP_DIR" -name "world_*.tar.gz" -mtime "+$${RETENTION_DAYS}" -delete
+      echo "[backup] Pruned backups older than $${RETENTION_DAYS} days"
+
+  - path: /var/lib/cloud/instance/scripts/start.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      echo "[start] Bringing up Valheim server..."
+      docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env up -d
+      echo "[start] Done. Check logs with: docker logs -f valheim"
+
+  - path: /var/lib/cloud/instance/scripts/stop.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      echo "[stop] Stopping Valheim server (graceful, 60s timeout)..."
+      docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env stop
+      echo "[stop] Server stopped."
+
+  - path: /var/lib/cloud/instance/scripts/valheim-backup.service
+    content: |
+      [Unit]
+      Description=Valheim world backup
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/opt/valheim/scripts/backup.sh
+
+  - path: /var/lib/cloud/instance/scripts/valheim-backup.timer
+    content: |
+      [Unit]
+      Description=Valheim world backup every 6 hours
+
+      [Timer]
+      OnCalendar=*-*-* 00,06,12,18:00:00
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target

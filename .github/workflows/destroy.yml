@@ -1,0 +1,45 @@
+name: Destroy Valheim Server
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DESTROY to confirm teardown of all Hetzner resources'
+        required: true
+
+jobs:
+  destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    env:
+      TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+      TF_VAR_server_name: ${{ secrets.SERVER_NAME }}
+      TF_VAR_world_name: ${{ secrets.WORLD_NAME }}
+      TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
+
+    steps:
+      - name: Validate confirmation
+        if: ${{ github.event.inputs.confirm != 'DESTROY' }}
+        run: |
+          echo "Confirmation input was not 'DESTROY'. Aborting."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
