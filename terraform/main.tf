@@ -61,10 +61,11 @@ resource "hcloud_server" "valheim" {
   firewall_ids = [hcloud_firewall.valheim.id]
 
   user_data = templatefile("${path.module}/cloud-init.yaml", {
-    volume_device = hcloud_volume.world.linux_device
-    server_name   = var.server_name
-    world_name    = var.world_name
-    server_pass   = var.server_pass
+    volume_device  = hcloud_volume.world.linux_device
+    server_name    = var.server_name
+    world_name     = var.world_name
+    server_pass    = var.server_pass
+    admin_steam_ids = var.admin_steam_ids
   })
 }
 

@@ -38,3 +38,9 @@ variable "server_pass" {
   type        = string
   sensitive   = true
 }
+
+variable "admin_steam_ids" {
+  description = "Steam 64-bit IDs of server admins"
+  type        = list(string)
+  default     = ["76561198088427001"]
+}

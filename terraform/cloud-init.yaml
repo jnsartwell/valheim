@@ -21,6 +21,12 @@ runcmd:
   - systemctl daemon-reload
   - systemctl enable --now valheim-backup.timer
 
+  # Write admin list
+  - truncate -s 0 /mnt/valheim-world/adminlist.txt
+%{ for id in admin_steam_ids ~}
+  - echo "${id}" >> /mnt/valheim-world/adminlist.txt
+%{ endfor ~}
+
   # Start Valheim
   - docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env up -d
 
