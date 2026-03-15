@@ -60,3 +60,14 @@ jobs:
           name: valheim-world-${{ github.run_number }}
           path: world-backup.tar.gz
           retention-days: 90
+
+      - name: Write job summary
+        run: |
+          echo "## One Eye's Keep — Backup Saved" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Artifact** | \`valheim-world-${{ github.run_number }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Retention** | 90 days |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Use this artifact name when running the Restore workflow." >> $GITHUB_STEP_SUMMARY

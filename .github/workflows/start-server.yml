@@ -30,5 +30,14 @@ jobs:
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HCLOUD_TOKEN }}" \
             "https://api.hetzner.cloud/v1/servers/${{ steps.server.outputs.id }}/actions/poweron"
-          echo "Server powered on. IP: ${{ steps.server.outputs.ip }}"
-          echo "Valheim container will start automatically via restart: always policy."
+
+      - name: Write job summary
+        run: |
+          echo "## One Eye's Keep — Powered On" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **IP** | \`${{ steps.server.outputs.ip }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Connect** | \`${{ steps.server.outputs.ip }}:2456\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Valheim container starts automatically. Allow ~2 minutes before connecting." >> $GITHUB_STEP_SUMMARY

@@ -27,6 +27,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "~1.9"
+          terraform_wrapper: false
 
       - name: Terraform Init
         run: terraform init
@@ -37,5 +38,14 @@ jobs:
       - name: Terraform Apply
         run: terraform apply tfplan
 
-      - name: Show Server IP
-        run: terraform output server_ip
+      - name: Write job summary
+        run: |
+          IP=$(terraform output -raw server_ip)
+          echo "## One Eye's Keep — Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Server IP** | \`$IP\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Connect** | \`$IP:2456\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Server may take 3–5 minutes to finish initializing." >> $GITHUB_STEP_SUMMARY

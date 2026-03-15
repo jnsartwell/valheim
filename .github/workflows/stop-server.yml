@@ -41,4 +41,11 @@ jobs:
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.HCLOUD_TOKEN }}" \
             "https://api.hetzner.cloud/v1/servers/${{ steps.server.outputs.id }}/actions/poweroff"
-          echo "Server powered off."
+
+      - name: Write job summary
+        run: |
+          echo "## One Eye's Keep — Powered Off" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "World saved. Server powered off at $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Hetzner billing continues while the server exists. Run Destroy to stop billing entirely." >> $GITHUB_STEP_SUMMARY

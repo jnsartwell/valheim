@@ -19,14 +19,6 @@ jobs:
           echo "type=$(echo $RESPONSE | jq -r '.servers[0].server_type.name')" >> $GITHUB_OUTPUT
           echo "datacenter=$(echo $RESPONSE | jq -r '.servers[0].datacenter.location.name')" >> $GITHUB_OUTPUT
 
-      - name: Report Hetzner status
-        run: |
-          echo "=== Hetzner Server ==="
-          echo "Status:     ${{ steps.server.outputs.status }}"
-          echo "IP:         ${{ steps.server.outputs.ip }}"
-          echo "Type:       ${{ steps.server.outputs.type }}"
-          echo "Datacenter: ${{ steps.server.outputs.datacenter }}"
-
       - name: Setup SSH
         if: steps.server.outputs.status == 'running'
         run: |
@@ -35,13 +27,38 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ steps.server.outputs.ip }} >> ~/.ssh/known_hosts
 
-      - name: Check container status
+      - name: Get container info
+        id: container
         if: steps.server.outputs.status == 'running'
         run: |
-          echo ""
-          echo "=== Valheim Container ==="
-          ssh root@${{ steps.server.outputs.ip }} "
-            docker ps -a --filter name=valheim --format 'Status: {{.Status}}'
-            echo 'Uptime:' \$(uptime -p)
-            echo 'Memory:' \$(free -h | awk '/Mem:/ {print \$3 \" used / \" \$2 \" total\"}')
-          "
+          INFO=$(ssh root@${{ steps.server.outputs.ip }} "
+            STATUS=\$(docker ps -a --filter name=valheim --format '{{.Status}}')
+            UPTIME=\$(uptime -p)
+            MEM=\$(free -h | awk '/Mem:/ {print \$3 \" / \" \$2}')
+            echo \"container_status=\$STATUS\"
+            echo \"uptime=\$UPTIME\"
+            echo \"memory=\$MEM\"
+          ")
+          echo "$INFO" >> $GITHUB_OUTPUT
+
+      - name: Write job summary
+        run: |
+          echo "## One Eye's Keep — Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Hetzner Server" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ steps.server.outputs.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **IP** | \`${{ steps.server.outputs.ip }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Connect** | \`${{ steps.server.outputs.ip }}:2456\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Type** | ${{ steps.server.outputs.type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Datacenter** | ${{ steps.server.outputs.datacenter }} |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.server.outputs.status }}" == "running" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Valheim Container" >> $GITHUB_STEP_SUMMARY
+            echo "| | |" >> $GITHUB_STEP_SUMMARY
+            echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+            echo "| **Container** | ${{ steps.container.outputs.container_status }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| **Uptime** | ${{ steps.container.outputs.uptime }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| **Memory** | ${{ steps.container.outputs.memory }} |" >> $GITHUB_STEP_SUMMARY
+          fi

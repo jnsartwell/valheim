@@ -46,3 +46,9 @@ jobs:
         run: |
           ssh root@${{ steps.server_ip.outputs.ip }} \
             "docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env restart"
+
+      - name: Write job summary
+        run: |
+          echo "## One Eye's Keep — Restarted" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Container restarted at $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
