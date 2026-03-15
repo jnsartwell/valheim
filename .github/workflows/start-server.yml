@@ -1,4 +1,4 @@
-name: Start Valheim Server
+name: Power On Hetzner Server
 
 on:
   workflow_dispatch:

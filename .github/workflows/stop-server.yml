@@ -1,4 +1,4 @@
-name: Stop Valheim Server
+name: Power Off Hetzner Server
 
 on:
   workflow_dispatch:
