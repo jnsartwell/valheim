@@ -7,10 +7,6 @@ runcmd:
   - mount ${volume_device} /mnt/valheim-world
   - echo "${volume_device} /mnt/valheim-world ext4 defaults,nofail 0 2" >> /etc/fstab
 
-  # Install and enable backup timer
-  - systemctl daemon-reload
-  - systemctl enable --now valheim-backup.timer
-
   # Write admin list
   - truncate -s 0 /mnt/valheim-world/adminlist.txt
 %{ for id in admin_steam_ids ~}
@@ -47,35 +43,19 @@ write_files:
             WORLD_NAME: $${WORLD_NAME}
             SERVER_PASS: $${SERVER_PASS}
             SERVER_PUBLIC: $${SERVER_PUBLIC:-true}
-            BACKUPS: "false"
             UPDATE_CRON: "0 4 * * *"
             IDLE_DATAGRAM_MAX_COUNT: "0"
-            POST_SERVER_LISTENING_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"${server_name} is online! Connect now.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
-            PRE_SERVER_SHUTDOWN_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"${server_name} is going offline.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
+            BACKUPS: "true"
+            BACKUPS_CRON: "0 */6 * * *"
+            BACKUPS_DIRECTORY: /config/backups
+            BACKUPS_MAX_AGE: "7"
+            POST_SERVER_LISTENING_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"$${SERVER_NAME} is online! Connect now.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
+            PRE_SERVER_SHUTDOWN_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"$${SERVER_NAME} is going offline.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
           volumes:
             - /mnt/valheim-world:/config
           cap_add:
             - sys_nice
           stop_grace_period: 60s
-
-  - path: /opt/valheim/scripts/backup.sh
-    permissions: "0755"
-    content: |
-      #!/usr/bin/env bash
-      set -euo pipefail
-      WORLD_DIR="/mnt/valheim-world"
-      BACKUP_DIR="/mnt/valheim-world/backups"
-      RETENTION_DAYS="$${BACKUP_DAYS:-7}"
-      TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-      BACKUP_FILE="$${BACKUP_DIR}/world_$${TIMESTAMP}.tar.gz"
-      mkdir -p "$BACKUP_DIR"
-      echo "[backup] Starting world backup at $${TIMESTAMP}"
-      docker exec valheim bash -c 'kill -USR1 $(pgrep valheim_server)' 2>/dev/null || true
-      sleep 5
-      tar -czf "$BACKUP_FILE" --exclude="$${BACKUP_DIR}" -C "$WORLD_DIR" worlds_local
-      echo "[backup] Written to $${BACKUP_FILE}"
-      find "$BACKUP_DIR" -name "world_*.tar.gz" -mtime "+$${RETENTION_DAYS}" -delete
-      echo "[backup] Pruned backups older than $${RETENTION_DAYS} days"
 
   - path: /opt/valheim/scripts/start.sh
     permissions: "0755"
@@ -95,25 +75,21 @@ write_files:
       docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env stop
       echo "[stop] Server stopped."
 
-  - path: /etc/systemd/system/valheim-backup.service
+  - path: /opt/valheim/scripts/backup.sh
+    permissions: "0755"
     content: |
-      [Unit]
-      Description=Valheim world backup
-      After=docker.service
-      Requires=docker.service
-
-      [Service]
-      Type=oneshot
-      ExecStart=/opt/valheim/scripts/backup.sh
-
-  - path: /etc/systemd/system/valheim-backup.timer
-    content: |
-      [Unit]
-      Description=Valheim world backup every 6 hours
-
-      [Timer]
-      OnCalendar=*-*-* 00,06,12,18:00:00
-      Persistent=true
-
-      [Install]
-      WantedBy=timers.target
+      #!/usr/bin/env bash
+      set -euo pipefail
+      WORLD_DIR="/mnt/valheim-world"
+      BACKUP_DIR="/mnt/valheim-world/backups"
+      RETENTION_DAYS="$${BACKUP_DAYS:-7}"
+      TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+      BACKUP_FILE="$${BACKUP_DIR}/world_$${TIMESTAMP}.tar.gz"
+      mkdir -p "$BACKUP_DIR"
+      echo "[backup] Starting world backup at $${TIMESTAMP}"
+      docker exec valheim bash -c 'kill -USR1 $(pgrep valheim_server)' 2>/dev/null || true
+      sleep 5
+      tar -czf "$BACKUP_FILE" --exclude="$${BACKUP_DIR}" -C "$WORLD_DIR" worlds_local
+      echo "[backup] Written to $${BACKUP_FILE}"
+      find "$BACKUP_DIR" -name "world_*.tar.gz" -mtime "+$${RETENTION_DAYS}" -delete
+      echo "[backup] Pruned backups older than $${RETENTION_DAYS} days"

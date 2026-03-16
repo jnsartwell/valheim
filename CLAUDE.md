@@ -2,7 +2,7 @@
 
 ## Architecture
 
-All server config (scripts, compose file, .env) is written to the server entirely through `terraform/cloud-init.yaml` using Terraform's `templatefile()`. There are no separate script files in the repo — cloud-init is the single source of truth for what ends up on the server.
+All server config (scripts, compose file, .env) is written to the server through `terraform/modules/valheim/cloud-init.yaml` using Terraform's `templatefile()`. Cloud-init is the single source of truth for what ends up on the server. Scheduled backups are handled by the `lloesche/valheim-server` image's built-in support; `backup.sh` exists for on-demand backups triggered by the Actions workflow.
 
 ## Critical: Terraform template escaping in cloud-init.yaml
 
@@ -11,10 +11,6 @@ All server config (scripts, compose file, .env) is written to the server entirel
 Terraform template variables (passed from main.tf) use normal `${...}`: `${volume_device}`, `${server_name}`, `${world_name}`, `${server_pass}`.
 
 Docker Compose variables inside embedded compose content also use `$${...}`: `$${SERVER_NAME}`, `$${SERVER_PASS}`, etc.
-
-## Critical: Do not write scripts to /var/lib/cloud/instance/scripts/
-
-cloud-init's `scripts_user` module automatically executes all executable files in `/var/lib/cloud/instance/scripts/`. Writing start.sh/stop.sh there will cause them to run during cloud-init, stopping the server immediately after it starts. All scripts must be written directly to their final destinations (e.g. `/opt/valheim/scripts/`) via `write_files`.
 
 ## State
 
@@ -65,6 +61,10 @@ Repository admins are on the bypass list and can self-merge without a reviewer a
 
 Terraform manages a `cloudflare_record` A resource pointing `valheim.redmist.online` at the server IP. The record must be **DNS only (proxied = false)** — Valheim uses UDP and Cloudflare's proxy only handles HTTP/HTTPS. The Zone ID is hardcoded as a variable default in `variables.tf`. The `hostname` Terraform output returns the full hostname derived from the record resource.
 
+## Backups
+
+Handled by the `lloesche/valheim-server` image via `BACKUPS=true`. Runs every 6 hours (`BACKUPS_CRON`), stores archives in `/config/backups` on the world volume, and retains 7 days (`BACKUPS_MAX_AGE`). No host-side scripts or systemd timers needed.
+
 ## Discord notifications
 
-The lloesche/valheim-server image supports hook env vars that run shell commands on events. We use `SERVER_LISTENING_HOOK`, `PRE_STOP_HOOK`, and `POST_UPDATE_HOOK` with `curl` to post to Discord. The webhook URL flows: GitHub secret → Terraform variable → `.env` on server → Docker Compose substitution → baked into hook commands at container start.
+The lloesche/valheim-server image supports hook env vars that run shell commands on events. We use `POST_SERVER_LISTENING_HOOK` and `PRE_SERVER_SHUTDOWN_HOOK` with `curl` to post to Discord. The webhook URL flows: GitHub secret → Terraform variable → `.env` on server → Docker Compose substitution → baked into hook commands at container start.
