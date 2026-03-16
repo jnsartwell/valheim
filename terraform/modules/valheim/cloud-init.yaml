@@ -4,8 +4,12 @@ runcmd:
   # Mount world volume (wait for device to appear after Terraform attaches it)
   - until [ -b "${volume_device}" ]; do sleep 2; done
   - mkdir -p /mnt/valheim-world
-  - mount ${volume_device} /mnt/valheim-world
-  - echo "${volume_device} /mnt/valheim-world ext4 defaults,nofail 0 2" >> /etc/fstab
+  - mount -o noatime ${volume_device} /mnt/valheim-world
+  - echo "${volume_device} /mnt/valheim-world ext4 defaults,noatime,nofail 0 2" >> /etc/fstab
+
+  # Kernel tuning — protect game memory from being swapped when additional services run
+  - sysctl -w vm.swappiness=10
+  - echo "vm.swappiness=10" >> /etc/sysctl.conf
 
   # Write admin list
   - truncate -s 0 /mnt/valheim-world/adminlist.txt
