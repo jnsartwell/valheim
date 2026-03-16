@@ -5,57 +5,35 @@ on:
   schedule:
     - cron: '0 6 * * *'
 
+env:
+  SERVER_HOST: ${{ vars.SERVER_HOST }}
+
 jobs:
   backup:
     name: Run Backup & Download Artifact
     runs-on: ubuntu-latest
 
-    env:
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-      TF_VAR_server_name: ${{ vars.SERVER_NAME }}
-      TF_VAR_world_name: ${{ vars.WORLD_NAME }}
-      TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
-
-      - name: Get Server IP
-        id: server_ip
-        working-directory: terraform
-        run: echo "ip=$(terraform output -raw server_ip)" >> $GITHUB_OUTPUT
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ steps.server_ip.outputs.ip }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Trigger backup on server
         run: |
-          ssh root@${{ steps.server_ip.outputs.ip }} "/opt/valheim/scripts/backup.sh"
+          ssh root@${{ env.SERVER_HOST }} "/opt/valheim/scripts/backup.sh"
 
       - name: Download latest backup
         run: |
-          LATEST=$(ssh root@${{ steps.server_ip.outputs.ip }} \
+          LATEST=$(ssh root@${{ env.SERVER_HOST }} \
             "ls -t /mnt/valheim-world/backups/world_*.tar.gz 2>/dev/null | head -1")
           if [ -z "$LATEST" ]; then
             echo "No backups found yet — server may not have run long enough."
             exit 1
           fi
-          scp root@${{ steps.server_ip.outputs.ip }}:"$LATEST" world-backup.tar.gz
+          scp root@${{ env.SERVER_HOST }}:"$LATEST" world-backup.tar.gz
 
       - name: Set backup timestamp
         run: echo "BACKUP_TIMESTAMP=$(date -u +%Y%m%d-%H%M)" >> $GITHUB_ENV

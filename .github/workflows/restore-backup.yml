@@ -7,37 +7,15 @@ on:
         description: 'Artifact name to restore (e.g. valheim-world-RedMist-20260316-1253)'
         required: true
 
+env:
+  SERVER_HOST: ${{ vars.SERVER_HOST }}
+
 jobs:
   restore:
     name: Restore World from Backup
     runs-on: ubuntu-latest
 
-    env:
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-      TF_VAR_server_name: ${{ vars.SERVER_NAME }}
-      TF_VAR_world_name: ${{ vars.WORLD_NAME }}
-      TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
-
-      - name: Get Server IP
-        id: server_ip
-        working-directory: terraform
-        run: echo "ip=$(terraform output -raw server_ip)" >> $GITHUB_OUTPUT
-
       - name: Download backup artifact
         env:
           GH_TOKEN: ${{ github.token }}
@@ -62,16 +40,16 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ steps.server_ip.outputs.ip }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Stop Valheim container
         run: |
-          ssh root@${{ steps.server_ip.outputs.ip }} "/opt/valheim/scripts/stop.sh"
+          ssh root@${{ env.SERVER_HOST }} "/opt/valheim/scripts/stop.sh"
 
       - name: Upload and restore backup
         run: |
-          scp restore/world-backup.tar.gz root@${{ steps.server_ip.outputs.ip }}:/tmp/world-restore.tar.gz
-          ssh root@${{ steps.server_ip.outputs.ip }} "
+          scp restore/world-backup.tar.gz root@${{ env.SERVER_HOST }}:/tmp/world-restore.tar.gz
+          ssh root@${{ env.SERVER_HOST }} "
             cd /mnt/valheim-world
             rm -rf worlds_local
             tar -xzf /tmp/world-restore.tar.gz
@@ -81,4 +59,4 @@ jobs:
 
       - name: Start Valheim container
         run: |
-          ssh root@${{ steps.server_ip.outputs.ip }} "/opt/valheim/scripts/start.sh"
+          ssh root@${{ env.SERVER_HOST }} "/opt/valheim/scripts/start.sh"
