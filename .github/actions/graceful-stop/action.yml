@@ -1,0 +1,24 @@
+name: Graceful Stop Valheim
+description: SSH into server and gracefully stop the Valheim container (best-effort)
+
+inputs:
+  ssh_private_key:
+    required: true
+  server_host:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup SSH
+      uses: ./.github/actions/setup-ssh
+      with:
+        ssh_private_key: ${{ inputs.ssh_private_key }}
+        server_host: ${{ inputs.server_host }}
+
+    - name: Gracefully stop Valheim server
+      shell: bash
+      continue-on-error: true
+      run: |
+        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@${{ inputs.server_host }} \
+          "/opt/valheim/scripts/stop.sh"

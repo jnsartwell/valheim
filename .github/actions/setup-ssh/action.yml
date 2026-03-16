@@ -1,0 +1,19 @@
+name: Setup SSH
+description: Write SSH key and add host to known_hosts
+
+inputs:
+  ssh_private_key:
+    required: true
+  server_host:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup SSH
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ inputs.ssh_private_key }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H ${{ inputs.server_host }} >> ~/.ssh/known_hosts 2>/dev/null || true

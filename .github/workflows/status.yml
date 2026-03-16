@@ -9,23 +9,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Get server info
         id: server
-        run: |
-          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.HCLOUD_TOKEN }}" \
-            "https://api.hetzner.cloud/v1/servers?name=valheim")
-          echo "ip=$(echo $RESPONSE | jq -r '.servers[0].public_net.ipv4.ip')" >> $GITHUB_OUTPUT
-          echo "status=$(echo $RESPONSE | jq -r '.servers[0].status')" >> $GITHUB_OUTPUT
-          echo "type=$(echo $RESPONSE | jq -r '.servers[0].server_type.name')" >> $GITHUB_OUTPUT
-          echo "datacenter=$(echo $RESPONSE | jq -r '.servers[0].datacenter.location.name')" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/hetzner-server-info
+        with:
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
 
       - name: Setup SSH
         if: steps.server.outputs.status == 'running'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ steps.server.outputs.ip }} >> ~/.ssh/known_hosts
+        uses: ./.github/actions/setup-ssh
+        with:
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          server_host: ${{ steps.server.outputs.ip }}
 
       - name: Get container info
         id: container

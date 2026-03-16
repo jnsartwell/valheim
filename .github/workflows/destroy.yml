@@ -36,10 +36,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: ./.github/actions/setup-terraform
 
-      - name: Terraform Init
-        run: terraform init
+      - name: Gracefully stop Valheim server
+        uses: ./.github/actions/graceful-stop
+        with:
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          server_host: ${{ vars.SERVER_HOST }}
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve

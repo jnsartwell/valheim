@@ -1,0 +1,38 @@
+name: Hetzner Server Info
+description: Query Hetzner API for server details
+
+inputs:
+  hcloud_token:
+    required: true
+
+outputs:
+  id:
+    description: Server ID
+    value: ${{ steps.server.outputs.id }}
+  ip:
+    description: Server public IPv4 address
+    value: ${{ steps.server.outputs.ip }}
+  status:
+    description: Server status (running, off, etc.)
+    value: ${{ steps.server.outputs.status }}
+  type:
+    description: Server type name
+    value: ${{ steps.server.outputs.type }}
+  datacenter:
+    description: Datacenter location name
+    value: ${{ steps.server.outputs.datacenter }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get server info
+      id: server
+      shell: bash
+      run: |
+        RESPONSE=$(curl -s -H "Authorization: Bearer ${{ inputs.hcloud_token }}" \
+          "https://api.hetzner.cloud/v1/servers?name=valheim")
+        echo "id=$(echo $RESPONSE | jq -r '.servers[0].id')" >> $GITHUB_OUTPUT
+        echo "ip=$(echo $RESPONSE | jq -r '.servers[0].public_net.ipv4.ip')" >> $GITHUB_OUTPUT
+        echo "status=$(echo $RESPONSE | jq -r '.servers[0].status')" >> $GITHUB_OUTPUT
+        echo "type=$(echo $RESPONSE | jq -r '.servers[0].server_type.name')" >> $GITHUB_OUTPUT
+        echo "datacenter=$(echo $RESPONSE | jq -r '.servers[0].datacenter.location.name')" >> $GITHUB_OUTPUT

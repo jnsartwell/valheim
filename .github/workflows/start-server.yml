@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Get server info
         id: server
-        run: |
-          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.HCLOUD_TOKEN }}" \
-            "https://api.hetzner.cloud/v1/servers?name=valheim")
-          echo "id=$(echo $RESPONSE | jq -r '.servers[0].id')" >> $GITHUB_OUTPUT
-          echo "ip=$(echo $RESPONSE | jq -r '.servers[0].public_net.ipv4.ip')" >> $GITHUB_OUTPUT
-          echo "status=$(echo $RESPONSE | jq -r '.servers[0].status')" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/hetzner-server-info
+        with:
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
 
       - name: Skip if already running
         run: |
