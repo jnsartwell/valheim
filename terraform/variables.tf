@@ -40,7 +40,7 @@ variable "world_name" {
 }
 
 variable "server_pass" {
-  description = "Valheim server password (min 5 characters)"
+  description = "Valheim server password"
   type        = string
   sensitive   = true
 }
