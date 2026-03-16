@@ -7,38 +7,16 @@ on:
         description: 'Release tag to import from (e.g. world-MyWorld-20260316)'
         required: true
 
+env:
+  SERVER_HOST: ${{ vars.SERVER_HOST }}
+
 jobs:
   import:
     name: Import World from Release
     runs-on: ubuntu-latest
     environment: infra
 
-    env:
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-      TF_VAR_server_name: ${{ vars.SERVER_NAME }}
-      TF_VAR_world_name: ${{ vars.WORLD_NAME }}
-      TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
-
-      - name: Get Server IP
-        id: server_ip
-        working-directory: terraform
-        run: echo "ip=$(terraform output -raw server_ip)" >> $GITHUB_OUTPUT
-
       - name: Download release asset
         env:
           GH_TOKEN: ${{ github.token }}
@@ -78,11 +56,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ steps.server_ip.outputs.ip }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Stop Valheim container
         run: |
-          ssh root@${{ steps.server_ip.outputs.ip }} "/opt/valheim/scripts/stop.sh"
+          ssh root@${{ env.SERVER_HOST }} "/opt/valheim/scripts/stop.sh"
 
       - name: Build import script
         run: |
@@ -118,16 +96,15 @@ jobs:
 
       - name: Upload and import world
         run: |
-          SERVER=${{ steps.server_ip.outputs.ip }}
-          scp "$ASSET_PATH" root@${SERVER}:/tmp/world-import.tar.gz
-          scp /tmp/import-world.sh root@${SERVER}:/tmp/import-world.sh
+          scp "$ASSET_PATH" root@${{ env.SERVER_HOST }}:/tmp/world-import.tar.gz
+          scp /tmp/import-world.sh root@${{ env.SERVER_HOST }}:/tmp/import-world.sh
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          ssh root@${SERVER} "/tmp/import-world.sh '${SOURCE_WORLD}' '${{ vars.WORLD_NAME }}' '${{ inputs.tag }}' '${{ github.actor }}' '${RUN_URL}'"
-          ssh root@${SERVER} "rm /tmp/import-world.sh"
+          ssh root@${{ env.SERVER_HOST }} "/tmp/import-world.sh '${SOURCE_WORLD}' '${{ vars.WORLD_NAME }}' '${{ inputs.tag }}' '${{ github.actor }}' '${RUN_URL}'"
+          ssh root@${{ env.SERVER_HOST }} "rm /tmp/import-world.sh"
 
       - name: Start Valheim container
         run: |
-          ssh root@${{ steps.server_ip.outputs.ip }} "/opt/valheim/scripts/start.sh"
+          ssh root@${{ env.SERVER_HOST }} "/opt/valheim/scripts/start.sh"
 
       - name: Write job summary
         run: |
@@ -139,4 +116,4 @@ jobs:
           echo "| **Source world** | \`${SOURCE_WORLD}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Target world** | \`${{ vars.WORLD_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Imported by** | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Server** | \`${{ steps.server_ip.outputs.ip }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Server** | \`${{ env.SERVER_HOST }}\` |" >> $GITHUB_STEP_SUMMARY

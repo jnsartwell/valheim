@@ -87,8 +87,6 @@ write_files:
       BACKUP_FILE="$${BACKUP_DIR}/world_$${TIMESTAMP}.tar.gz"
       mkdir -p "$BACKUP_DIR"
       echo "[backup] Starting world backup at $${TIMESTAMP}"
-      docker exec valheim bash -c 'kill -USR1 $(pgrep valheim_server)' 2>/dev/null || true
-      sleep 5
       tar -czf "$BACKUP_FILE" --exclude="$${BACKUP_DIR}" -C "$WORLD_DIR" worlds_local
       echo "[backup] Written to $${BACKUP_FILE}"
       find "$BACKUP_DIR" -name "world_*.tar.gz" -mtime "+$${RETENTION_DAYS}" -delete
