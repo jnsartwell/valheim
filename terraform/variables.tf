@@ -17,7 +17,7 @@ variable "ssh_public_key" {
 }
 
 variable "allowed_ssh_ips" {
-  description = "IP ranges allowed to SSH into the server"
+  description = "IP ranges allowed to SSH into the server (open by default for GitHub Actions workflows)"
   type        = list(string)
   default     = ["0.0.0.0/0", "::/0"]
 }
