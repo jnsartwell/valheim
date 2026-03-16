@@ -1,4 +1,4 @@
-name: Server Status
+name: "Server: Status"
 
 on:
   workflow_dispatch:

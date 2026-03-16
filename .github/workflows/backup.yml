@@ -1,4 +1,4 @@
-name: Download World Backup
+name: "Backup: Snapshot"
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   backup:
-    name: Download Latest Backup
+    name: Run Backup & Download Artifact
     runs-on: ubuntu-latest
 
     env:
@@ -25,7 +25,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "~1.9"
           terraform_wrapper: false
 
       - name: Terraform Init

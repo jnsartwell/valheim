@@ -1,4 +1,4 @@
-name: Power On Hetzner Server
+name: "Server: Power On"
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
           echo "ip=$(echo $RESPONSE | jq -r '.servers[0].public_net.ipv4.ip')" >> $GITHUB_OUTPUT
           echo "status=$(echo $RESPONSE | jq -r '.servers[0].status')" >> $GITHUB_OUTPUT
 
-      - name: Check server is off
+      - name: Skip if already running
         run: |
           if [ "${{ steps.server.outputs.status }}" == "running" ]; then
             echo "Server is already running."

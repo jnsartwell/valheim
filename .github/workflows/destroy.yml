@@ -1,4 +1,4 @@
-name: Destroy Valheim Server
+name: "Terraform: Destroy"
 
 on:
   workflow_dispatch:
@@ -37,8 +37,6 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "~1.9"
 
       - name: Terraform Init
         run: terraform init

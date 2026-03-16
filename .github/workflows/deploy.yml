@@ -1,4 +1,4 @@
-name: Deploy Valheim Server
+name: "Terraform: Deploy"
 
 on:
   push:
@@ -6,26 +6,26 @@ on:
     paths:
       - 'terraform/**'
 
+env:
+  TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+  TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+  TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+  TF_VAR_server_name: ${{ vars.SERVER_NAME }}
+  TF_VAR_world_name: ${{ vars.WORLD_NAME }}
+  TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
+  TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
 jobs:
-  deploy:
-    name: Terraform Apply
+  plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform
     concurrency:
       group: terraform-apply
       cancel-in-progress: false
-
-    env:
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-      TF_VAR_server_name: ${{ vars.SERVER_NAME }}
-      TF_VAR_world_name: ${{ vars.WORLD_NAME }}
-      TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
-      TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    defaults:
+      run:
+        working-directory: terraform
 
     steps:
       - name: Checkout
@@ -34,14 +34,52 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "~1.9"
           terraform_wrapper: false
 
       - name: Terraform Init
         run: terraform init
 
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/tfplan
+          retention-days: 1
+
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: plan
+    concurrency:
+      group: terraform-apply
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: terraform
+
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply tfplan
 
       - name: Write job summary
         run: |
