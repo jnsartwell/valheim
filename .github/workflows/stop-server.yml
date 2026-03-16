@@ -1,11 +1,11 @@
-name: Power Off Hetzner Server
+name: "Server: Power Off"
 
 on:
   workflow_dispatch:
 
 jobs:
   stop:
-    name: Graceful Stop + Power Off
+    name: Graceful Stop & Power Off
     runs-on: ubuntu-latest
 
     steps:
