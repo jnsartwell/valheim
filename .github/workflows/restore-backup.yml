@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       artifact_name:
-        description: 'Artifact name to restore (e.g. valheim-world-RedMist-12)'
+        description: 'Artifact name to restore (e.g. valheim-world-RedMist-20260316-1253)'
         required: true
 
 jobs:
@@ -45,7 +45,12 @@ jobs:
           mkdir -p restore
           ARTIFACT_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=${{ inputs.artifact_name }}&per_page=1" --jq '.artifacts[0].id')
           if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
-            echo "::error::Artifact '${{ inputs.artifact_name }}' not found"
+            echo "::error::Artifact '${{ inputs.artifact_name }}' not found."
+            echo ""
+            echo "Available artifacts:"
+            gh api "repos/${{ github.repository }}/actions/artifacts?per_page=10" --jq '.artifacts[] | select(.expired == false) | .name'
+            echo ""
+            echo "Browse all artifacts: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/backup.yml"
             exit 1
           fi
           gh api "repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip" > restore/artifact.zip

@@ -57,10 +57,13 @@ jobs:
           fi
           scp root@${{ steps.server_ip.outputs.ip }}:"$LATEST" world-backup.tar.gz
 
+      - name: Set backup timestamp
+        run: echo "BACKUP_TIMESTAMP=$(date -u +%Y%m%d-%H%M)" >> $GITHUB_ENV
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: valheim-world-${{ vars.WORLD_NAME }}-${{ github.run_number }}
+          name: valheim-world-${{ vars.WORLD_NAME }}-${{ env.BACKUP_TIMESTAMP }}
           path: world-backup.tar.gz
           retention-days: 90
 
@@ -70,7 +73,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Artifact** | \`valheim-world-${{ vars.WORLD_NAME }}-${{ github.run_number }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Artifact** | \`valheim-world-${{ vars.WORLD_NAME }}-${{ env.BACKUP_TIMESTAMP }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Retention** | 90 days |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> Use this artifact name when running the Restore workflow." >> $GITHUB_STEP_SUMMARY
