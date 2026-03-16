@@ -32,8 +32,9 @@ For emergencies outside the normal flow, **Manual Deploy Valheim Server** is ava
 | **Power Off Hetzner Server** | Manual | Gracefully stops the container then powers off the server. Hetzner billing continues. |
 | **Power On Hetzner Server** | Manual | Powers the server back on. Container starts automatically. |
 | **Restart Valheim Container** | Manual | Restarts the Docker container without touching the server. |
-| **Download World Backup** | Manual / daily at 6am | Triggers a backup on the server and downloads it as a GitHub artifact (90 day retention). |
-| **Restore World Backup** | Manual | Restores a named GitHub artifact to the server. |
+| **Backup: Snapshot** | Manual / daily at 6am | Triggers a backup on the server and downloads it as a GitHub artifact (90 day retention). Artifact names include world name and timestamp. |
+| **Backup: Restore** | Manual | Restores a named GitHub artifact to the server. Lists available artifacts on failure. |
+| **World: Import from Release** | Manual | Imports an external world save from a GitHub Release. Validates archive, auto-renames world files to match server config. Requires `infra` approval. |
 | **Server Status** | Manual | Shows Hetzner server state, IP, container status, and memory. |
 
 ## One-time setup
@@ -83,6 +84,7 @@ Variables:
 |---|---|
 | `SERVER_NAME` | Server name shown in the in-game browser |
 | `WORLD_NAME` | World save file name |
+| `SERVER_HOST` | Server hostname or IP for SSH (e.g. `valheim.redmist.online` or an IP address) |
 
 ## After deploying
 
@@ -99,7 +101,11 @@ docker logs -f valheim          # live server logs
 /opt/valheim/scripts/backup.sh  # manual backup
 ```
 
-Backups run automatically every 6 hours to `/mnt/valheim-world/backups/`, keeping 7 days of history. World backups are also downloadable as GitHub Actions artifacts via the **Download World Backup** workflow.
+Backups run automatically every 6 hours to `/mnt/valheim-world/backups/`, keeping 7 days of history. World backups are also downloadable as GitHub Actions artifacts via the **Backup: Snapshot** workflow. Artifacts are named with the world name and timestamp (e.g. `valheim-world-RedMist-20260316-1253`) for easy identification.
+
+To restore a backup, run **Backup: Restore** and provide the artifact name. If you enter a wrong name, the workflow will list available artifacts.
+
+To import an external world save (from local play, another server, etc.), create a GitHub Release with a `.tar.gz` containing the `.db` and `.fwl` files, then run **World: Import from Release**. The workflow will automatically rename the world files to match the server's configured `WORLD_NAME`.
 
 ## Connecting
 
