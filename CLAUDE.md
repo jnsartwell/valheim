@@ -24,9 +24,27 @@ Remote state is in Terraform Cloud (org: jnsartwell, workspace: valheim). The wo
 
 The volume (`valheim-world`) persists the world save across server recreate cycles. The Hetzner docker-ce image reboots after first cloud-init run — `restart: always` on the container handles this.
 
+## Development flow
+
+All changes must go through a feature branch and pull request — never commit directly to `main`.
+
+```bash
+git checkout -b feat/your-change
+# make changes
+git add .
+git commit -m "..."
+git push -u origin feat/your-change
+# open PR on GitHub
+```
+
+Opening a PR triggers **Terraform Plan** automatically (for `terraform/**` changes). Merging to `main` triggers **Terraform Apply**. For emergencies, **Manual Deploy** is available via `workflow_dispatch` and requires `infra` environment approval.
+
+Repository admins are on the bypass list and can self-merge without a reviewer approval.
+
 ## Deploy vs Destroy
 
-- **Deploy workflow** = `terraform apply`. If cloud-init changed, Terraform recreates the server but the volume persists. World data is safe. Use this for all normal updates.
+- **Deploy** (merge to main) = `terraform apply`. If cloud-init changed, Terraform recreates the server but the volume persists. World data is safe.
+- **Manual Deploy** (workflow_dispatch) = force deploy outside the PR flow, gated by `infra` environment approval.
 - **Destroy workflow** = `terraform destroy`. Wipes everything including the volume. World data is gone. Only use when shutting down permanently.
 
 ## GitHub Secrets required
