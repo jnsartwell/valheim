@@ -10,11 +10,6 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
-variable "cloudflare_zone_id" {
-  description = "Cloudflare zone ID for redmist.online"
-  type        = string
-  default     = "04ef9294de8a84aec07f31302cc3b5f1"
-}
 
 variable "ssh_public_key" {
   description = "SSH public key to authorize on the server"

@@ -35,7 +35,7 @@ module "redmist" {
   admin_steam_ids     = var.admin_steam_ids
   discord_webhook_url = var.discord_webhook_url
 
-  cloudflare_zone_id = var.cloudflare_zone_id
+  cloudflare_zone_id = "04ef9294de8a84aec07f31302cc3b5f1"
   subdomain          = "valheim"
 
   server_type = "cpx31"
