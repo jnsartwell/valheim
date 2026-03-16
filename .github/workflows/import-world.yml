@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p import
-          gh release download "${{ inputs.tag }}" --pattern "*.tar.gz" --dir import
+          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.tar.gz" --dir import
           ASSET=$(ls import/*.tar.gz | head -1)
           if [ -z "$ASSET" ]; then
             echo "::error::No .tar.gz asset found in release ${{ inputs.tag }}"
