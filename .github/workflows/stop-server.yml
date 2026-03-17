@@ -43,7 +43,7 @@ jobs:
 
       - name: Write job summary
         run: |
-          echo "## RedMist — Powered Off" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ vars.SERVER_NAME }} — Powered Off" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "World saved. Server powered off at $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

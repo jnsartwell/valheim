@@ -93,7 +93,7 @@ jobs:
           IP=$(terraform output -raw server_ip)
           HOST=$(terraform output -raw hostname)
           CONNECT="${HOST:-$IP}:2456"
-          echo "## RedMist — Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ vars.SERVER_NAME }} — Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY

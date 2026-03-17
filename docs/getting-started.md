@@ -13,8 +13,8 @@ Deploy a Valheim dedicated server on Hetzner Cloud with a single `terraform appl
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/jnsartwell/valheim.git
-cd valheim/terraform
+git clone https://github.com/jnsartwell/valheim-hetzner-iac.git
+cd valheim-hetzner-iac/terraform
 ```
 
 ### 2. Configure the backend

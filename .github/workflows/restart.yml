@@ -28,6 +28,6 @@ jobs:
 
       - name: Write job summary
         run: |
-          echo "## RedMist — Restarted" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ vars.SERVER_NAME }} — Restarted" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Container restarted at $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY

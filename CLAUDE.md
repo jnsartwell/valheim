@@ -63,7 +63,7 @@ Variables:
 |----------|---------|
 | `SERVER_NAME` | Valheim server browser name |
 | `WORLD_NAME` | World save file name |
-| `SERVER_HOST` | Server hostname or IP used by operational workflows (e.g. `valheim.redmist.online`) |
+| `SERVER_HOST` | Server hostname or IP used by operational workflows (e.g. `valheim.example.com`) |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare zone ID (leave empty to skip DNS) |
 | `VALHEIM_ADMIN_IDS` | Steam 64-bit IDs as JSON array (e.g. `["765..."]`) |
 

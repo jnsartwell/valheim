@@ -41,7 +41,7 @@ jobs:
 
       - name: Write job summary
         run: |
-          echo "## RedMist — Status" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ vars.SERVER_NAME }} — Status" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Hetzner Server" >> $GITHUB_STEP_SUMMARY
           echo "| | |" >> $GITHUB_STEP_SUMMARY

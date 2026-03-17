@@ -19,8 +19,8 @@ Terraform module for running a [Valheim](https://www.valheimgame.com/) dedicated
 ## Quick start
 
 ```bash
-git clone https://github.com/jnsartwell/valheim.git
-cd valheim/terraform
+git clone https://github.com/jnsartwell/valheim-hetzner-iac.git
+cd valheim-hetzner-iac/terraform
 ```
 
 Create `terraform.tfvars`:

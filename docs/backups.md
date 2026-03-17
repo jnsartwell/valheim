@@ -31,7 +31,7 @@ If you use the included GitHub Actions workflows, you get offsite backup and res
 
 Triggers `backup.sh` on the server and downloads the archive as a GitHub Actions artifact (90-day retention). Runs on manual trigger and daily at 6am UTC.
 
-Artifact names include the world name and timestamp: `valheim-world-RedMist-20260316-1253`.
+Artifact names include the world name and timestamp: `valheim-world-MyWorld-20260316-1253`.
 
 ### Backup: Restore
 

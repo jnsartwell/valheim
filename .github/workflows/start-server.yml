@@ -33,7 +33,7 @@ jobs:
 
       - name: Write job summary
         run: |
-          echo "## RedMist — Powered On" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ vars.SERVER_NAME }} — Powered On" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY

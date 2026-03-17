@@ -51,6 +51,6 @@ jobs:
 
       - name: Write job summary
         run: |
-          echo "## RedMist — Destroyed" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ vars.SERVER_NAME }} — Destroyed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "All Hetzner resources have been torn down. Hetzner billing has stopped." >> $GITHUB_STEP_SUMMARY

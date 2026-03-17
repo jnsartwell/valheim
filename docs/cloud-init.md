@@ -1,6 +1,6 @@
 # Cloud-Init
 
-Cloud-init is the single source of truth for what ends up on the server. The template at `terraform/modules/valheim/cloud-init.yaml` is processed by Terraform's `templatefile()` function and passed as `user_data` to the Hetzner server resource.
+Cloud-init is the single source of truth for what ends up on the server. The template at `terraform/modules/valheim-hetzner/cloud-init.yaml` is processed by Terraform's `templatefile()` function and passed as `user_data` to the Hetzner server resource.
 
 ## What it does
 
@@ -21,7 +21,7 @@ Since `cloud-init.yaml` is processed by `templatefile()`, every `${...}` express
 
 | Context | Syntax | Example |
 |---|---|---|
-| Terraform variable (from `main.tf`) | `${var}` | `${volume_device}`, `${server_name}` |
+| Terraform variable (from `main.tf`) | `${var}` | `${volume_device}`, `${valheim_server_name}` |
 | Bash variable (in script content) | `$${var}` | `$${BACKUP_DIR}`, `$${TIMESTAMP}` |
 | Docker Compose variable (in compose content) | `$${var}` | `$${SERVER_NAME}`, `$${SERVER_PASS}` |
 
