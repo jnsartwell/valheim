@@ -16,7 +16,7 @@ inputs:
 outputs:
   artifact_name:
     description: Name of the uploaded backup artifact (empty if backup failed)
-    value: ${{ steps.upload.outputs.artifact_name || '' }}
+    value: ${{ steps.set-output.outputs.artifact_name || '' }}
 
 runs:
   using: composite
@@ -58,6 +58,7 @@ runs:
         retention-days: 90
 
     - name: Set artifact name output
+      id: set-output
       if: steps.download.outcome == 'success'
       shell: bash
       run: echo "artifact_name=${{ inputs.artifact_prefix }}-${{ inputs.world_name }}-${{ github.run_id }}" >> $GITHUB_OUTPUT
