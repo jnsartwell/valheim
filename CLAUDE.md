@@ -2,13 +2,13 @@
 
 ## Architecture
 
-All server config (scripts, compose file, .env) is written to the server through `terraform/modules/valheim/cloud-init.yaml` using Terraform's `templatefile()`. Cloud-init is the single source of truth for what ends up on the server. Scheduled backups are handled by the `lloesche/valheim-server` image's built-in support; `backup.sh` exists for on-demand backups triggered by the Actions workflow.
+All server config (scripts, compose file, .env) is written to the server through `terraform/modules/valheim-hetzner/cloud-init.yaml` using Terraform's `templatefile()`. Cloud-init is the single source of truth for what ends up on the server. Scheduled backups are handled by the `lloesche/valheim-server` image's built-in support; `backup.sh` exists for on-demand backups triggered by the Actions workflow.
 
 ## Critical: Terraform template escaping in cloud-init.yaml
 
 `cloud-init.yaml` is processed by `templatefile()`, so any `${...}` expression is treated as a Terraform variable. Bash variables inside embedded script content must use `$${...}` to escape them (e.g. `$${BACKUP_DIR}`, `$${TIMESTAMP}`).
 
-Terraform template variables (passed from main.tf) use normal `${...}`: `${volume_device}`, `${server_name}`, `${world_name}`, `${server_pass}`.
+Terraform template variables (passed from main.tf) use normal `${...}`: `${volume_device}`, `${valheim_server_name}`, `${valheim_world_name}`, `${valheim_server_pass}`.
 
 Docker Compose variables inside embedded compose content also use `$${...}`: `$${SERVER_NAME}`, `$${SERVER_PASS}`, etc.
 
@@ -55,7 +55,7 @@ Secrets:
 | `SSH_PRIVATE_KEY` | Used by Actions workflows to SSH into server |
 | `SERVER_PASS` | Server password (min 5 chars) |
 | `DISCORD_WEBHOOK_URL` | Discord channel webhook for server notifications |
-| `CLOUDFLARE_API_TOKEN` | Edit zone DNS permissions scoped to the domain zone |
+| `CLOUDFLARE_API_TOKEN` | Edit zone DNS permissions scoped to the domain zone (optional) |
 
 Variables:
 
@@ -64,10 +64,12 @@ Variables:
 | `SERVER_NAME` | Valheim server browser name |
 | `WORLD_NAME` | World save file name |
 | `SERVER_HOST` | Server hostname or IP used by operational workflows (e.g. `valheim.redmist.online`) |
+| `CLOUDFLARE_ZONE_ID` | Cloudflare zone ID (leave empty to skip DNS) |
+| `VALHEIM_ADMIN_IDS` | Steam 64-bit IDs as JSON array (e.g. `["765..."]`) |
 
-## DNS (Cloudflare)
+## DNS (Cloudflare) — optional
 
-Terraform manages a `cloudflare_record` A resource pointing `valheim.redmist.online` at the server IP. The record must be **DNS only (proxied = false)** — Valheim uses UDP and Cloudflare's proxy only handles HTTP/HTTPS. The Zone ID is hardcoded as a variable default in `variables.tf`. The `hostname` Terraform output returns the full hostname derived from the record resource.
+Cloudflare DNS is a separate module (`modules/cloudflare-dns`). The valheim module is pure Hetzner with no Cloudflare dependency. Root `main.tf` calls both modules — users who don't want DNS remove the `module "dns"` block, the cloudflare provider, and the related variables. The Zone ID is passed via the `CLOUDFLARE_ZONE_ID` GitHub Actions variable.
 
 ## Backups
 

@@ -8,7 +8,3 @@ output "volume_device" {
   value       = hcloud_volume.world.linux_device
 }
 
-output "hostname" {
-  description = "Valheim server hostname"
-  value       = cloudflare_record.valheim.hostname
-}

@@ -21,25 +21,31 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
-module "redmist" {
-  source = "./modules/valheim"
+module "valheim" {
+  source = "./modules/valheim-hetzner"
 
-  name            = "valheim"
-  location        = "ash"
+  name            = var.name
+  location        = var.location
   ssh_public_key  = var.ssh_public_key
   allowed_ssh_ips = var.allowed_ssh_ips
 
-  server_name         = var.server_name
-  world_name          = var.world_name
-  server_pass         = var.server_pass
-  admin_steam_ids     = var.admin_steam_ids
+  valheim_server_name = var.valheim_server_name
+  valheim_world_name  = var.valheim_world_name
+  valheim_server_pass = var.valheim_server_pass
+  valheim_admin_ids   = var.valheim_admin_ids
   discord_webhook_url = var.discord_webhook_url
 
-  cloudflare_zone_id = "04ef9294de8a84aec07f31302cc3b5f1"
-  subdomain          = "valheim"
+  server_type = var.server_type
+  volume_size = var.volume_size
+}
 
-  server_type = "cpx31"
-  volume_size = 10
-  dns_ttl     = var.dns_ttl
+# Cloudflare DNS — optional, remove this block and the cloudflare provider to skip DNS
+module "dns" {
+  source = "./modules/cloudflare-dns"
+
+  zone_id   = var.cloudflare_zone_id
+  subdomain = var.subdomain
+  server_ip = module.valheim.server_ip
+  ttl       = var.dns_ttl
 }
 
