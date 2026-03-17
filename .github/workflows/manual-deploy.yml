@@ -62,6 +62,14 @@ jobs:
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
           server_host: ${{ vars.SERVER_HOST }}
 
+      - name: Pre-deploy backup
+        id: backup
+        uses: ./.github/actions/pre-deploy-backup
+        with:
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          server_host: ${{ vars.SERVER_HOST }}
+          world_name: ${{ vars.WORLD_NAME }}
+
       - name: Download plan
         uses: actions/download-artifact@v4
         with:
@@ -85,5 +93,10 @@ jobs:
             echo "| **Hostname** | \`$HOST\` |" >> $GITHUB_STEP_SUMMARY
           fi
           echo "| **Connect** | \`$CONNECT\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          BACKUP="${{ steps.backup.outputs.artifact_name }}"
+          if [ -n "$BACKUP" ]; then
+            echo "| **Pre-deploy backup** | \`$BACKUP\` |" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> Server may take 3–5 minutes to finish initializing." >> $GITHUB_STEP_SUMMARY
