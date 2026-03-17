@@ -13,7 +13,7 @@ runcmd:
 
   # Write admin list
   - truncate -s 0 /mnt/valheim-world/adminlist.txt
-%{ for id in admin_steam_ids ~}
+%{ for id in valheim_admin_ids ~}
   - echo "${id}" >> /mnt/valheim-world/adminlist.txt
 %{ endfor ~}
 
@@ -24,9 +24,9 @@ write_files:
   - path: /opt/valheim/docker/.env
     permissions: "0600"
     content: |
-      SERVER_NAME=${server_name}
-      WORLD_NAME=${world_name}
-      SERVER_PASS=${server_pass}
+      SERVER_NAME=${valheim_server_name}
+      WORLD_NAME=${valheim_world_name}
+      SERVER_PASS=${valheim_server_pass}
       SERVER_PUBLIC=true
       DISCORD_WEBHOOK_URL=${discord_webhook_url}
 

@@ -18,24 +18,24 @@ variable "allowed_ssh_ips" {
   type        = list(string)
 }
 
-variable "server_name" {
-  description = "Valheim server name shown in the server browser"
+variable "valheim_server_name" {
+  description = "Valheim server name shown in the in-game browser"
   type        = string
 }
 
-variable "world_name" {
-  description = "Valheim world name (save file name)"
+variable "valheim_world_name" {
+  description = "Valheim world save file name"
   type        = string
 }
 
-variable "server_pass" {
-  description = "Valheim server password"
+variable "valheim_server_pass" {
+  description = "Valheim server password (min 5 characters)"
   type        = string
   sensitive   = true
 }
 
-variable "admin_steam_ids" {
-  description = "Steam 64-bit IDs of server admins"
+variable "valheim_admin_ids" {
+  description = "Steam 64-bit IDs of Valheim server admins"
   type        = list(string)
 }
 
@@ -43,16 +43,6 @@ variable "discord_webhook_url" {
   description = "Discord webhook URL for server notifications"
   type        = string
   sensitive   = true
-}
-
-variable "cloudflare_zone_id" {
-  description = "Cloudflare zone ID for the domain"
-  type        = string
-}
-
-variable "subdomain" {
-  description = "DNS subdomain for the server (e.g. 'valheim' → valheim.redmist.online)"
-  type        = string
 }
 
 variable "server_type" {
@@ -65,7 +55,3 @@ variable "volume_size" {
   type        = number
 }
 
-variable "dns_ttl" {
-  description = "TTL in seconds for the DNS A record"
-  type        = number
-}

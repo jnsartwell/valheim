@@ -10,6 +10,41 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
+variable "cloudflare_zone_id" {
+  description = "Cloudflare zone ID for the domain"
+  type        = string
+}
+
+variable "subdomain" {
+  description = "DNS subdomain for the server (e.g. 'valheim' → valheim.yourdomain.com)"
+  type        = string
+  default     = "valheim"
+}
+
+
+variable "name" {
+  description = "Base name for Hetzner resources (server, volume, firewall, SSH key)"
+  type        = string
+  default     = "valheim"
+}
+
+variable "location" {
+  description = "Hetzner datacenter location (e.g. 'ash', 'fsn1', 'nbg1')"
+  type        = string
+  default     = "ash"
+}
+
+variable "server_type" {
+  description = "Hetzner server type (e.g. 'cpx31', 'cpx41')"
+  type        = string
+  default     = "cpx31"
+}
+
+variable "volume_size" {
+  description = "Size of the persistent world volume in GB"
+  type        = number
+  default     = 10
+}
 
 variable "ssh_public_key" {
   description = "SSH public key to authorize on the server"
@@ -22,28 +57,28 @@ variable "allowed_ssh_ips" {
   default     = ["0.0.0.0/0", "::/0"]
 }
 
-variable "server_name" {
-  description = "Valheim server name shown in the server browser"
+variable "valheim_server_name" {
+  description = "Valheim server name shown in the in-game browser"
   type        = string
   default     = "Valheim Server"
 }
 
-variable "world_name" {
-  description = "Valheim world name (save file name)"
+variable "valheim_world_name" {
+  description = "Valheim world save file name"
   type        = string
   default     = "Midgard"
 }
 
-variable "server_pass" {
-  description = "Valheim server password"
+variable "valheim_server_pass" {
+  description = "Valheim server password (min 5 characters)"
   type        = string
   sensitive   = true
 }
 
-variable "admin_steam_ids" {
-  description = "Steam 64-bit IDs of server admins"
+variable "valheim_admin_ids" {
+  description = "Steam 64-bit IDs of Valheim server admins"
   type        = list(string)
-  default     = ["76561198088427001"]
+  default     = []
 }
 
 variable "discord_webhook_url" {

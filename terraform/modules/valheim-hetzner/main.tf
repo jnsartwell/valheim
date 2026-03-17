@@ -4,10 +4,6 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "~> 1.49"
     }
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "~> 4.0"
-    }
   }
 }
 
@@ -61,10 +57,10 @@ resource "hcloud_server" "valheim" {
 
   user_data = templatefile("${path.module}/cloud-init.yaml", {
     volume_device       = hcloud_volume.world.linux_device
-    server_name         = var.server_name
-    world_name          = var.world_name
-    server_pass         = var.server_pass
-    admin_steam_ids     = var.admin_steam_ids
+    valheim_server_name = var.valheim_server_name
+    valheim_world_name  = var.valheim_world_name
+    valheim_server_pass = var.valheim_server_pass
+    valheim_admin_ids   = var.valheim_admin_ids
     discord_webhook_url = var.discord_webhook_url
   })
 }
@@ -74,14 +70,4 @@ resource "hcloud_volume_attachment" "world" {
   volume_id = hcloud_volume.world.id
   server_id = hcloud_server.valheim.id
   automount = false
-}
-
-# DNS record — DNS only (no proxy), Valheim uses UDP
-resource "cloudflare_record" "valheim" {
-  zone_id = var.cloudflare_zone_id
-  name    = var.subdomain
-  content = hcloud_server.valheim.ipv4_address
-  type    = "A"
-  ttl     = var.dns_ttl
-  proxied = false
 }

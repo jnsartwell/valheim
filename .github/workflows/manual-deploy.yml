@@ -7,11 +7,13 @@ env:
   TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
   TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
   TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-  TF_VAR_server_name: ${{ vars.SERVER_NAME }}
-  TF_VAR_world_name: ${{ vars.WORLD_NAME }}
-  TF_VAR_server_pass: ${{ secrets.SERVER_PASS }}
+  TF_VAR_valheim_server_name: ${{ vars.SERVER_NAME }}
+  TF_VAR_valheim_world_name: ${{ vars.WORLD_NAME }}
+  TF_VAR_valheim_server_pass: ${{ secrets.SERVER_PASS }}
+  TF_VAR_valheim_admin_ids: ${{ vars.VALHEIM_ADMIN_IDS }}
   TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
   TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  TF_VAR_cloudflare_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
 
 jobs:
   plan:
@@ -73,12 +75,15 @@ jobs:
         run: |
           IP=$(terraform output -raw server_ip)
           HOST=$(terraform output -raw hostname)
+          CONNECT="${HOST:-$IP}:2456"
           echo "## RedMist — Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| **Server IP** | \`$IP\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Hostname** | \`$HOST\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Connect** | \`$HOST:2456\` |" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$HOST" ]; then
+            echo "| **Hostname** | \`$HOST\` |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "| **Connect** | \`$CONNECT\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> Server may take 3–5 minutes to finish initializing." >> $GITHUB_STEP_SUMMARY
