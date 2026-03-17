@@ -1,0 +1,59 @@
+name: Pre-Deploy Backup
+description: Backup world data before a deploy (best-effort, does not block deploy on failure)
+
+inputs:
+  ssh_private_key:
+    required: true
+  server_host:
+    required: true
+  world_name:
+    required: true
+
+outputs:
+  artifact_name:
+    description: Name of the uploaded backup artifact (empty if backup failed)
+    value: ${{ steps.upload.outputs.artifact_name || '' }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup SSH
+      uses: ./.github/actions/setup-ssh
+      with:
+        ssh_private_key: ${{ inputs.ssh_private_key }}
+        server_host: ${{ inputs.server_host }}
+
+    - name: Trigger backup on server
+      id: backup
+      shell: bash
+      continue-on-error: true
+      run: |
+        ssh -o ConnectTimeout=10 root@${{ inputs.server_host }} "/opt/valheim/scripts/backup.sh"
+
+    - name: Download backup
+      id: download
+      if: steps.backup.outcome == 'success'
+      shell: bash
+      continue-on-error: true
+      run: |
+        LATEST=$(ssh root@${{ inputs.server_host }} \
+          "ls -t /mnt/valheim-world/backups/world_*.tar.gz 2>/dev/null | head -1")
+        if [ -z "$LATEST" ]; then
+          echo "No backups found"
+          exit 1
+        fi
+        scp root@${{ inputs.server_host }}:"$LATEST" world-backup.tar.gz
+
+    - name: Upload artifact
+      id: upload
+      if: steps.download.outcome == 'success'
+      uses: actions/upload-artifact@v4
+      with:
+        name: pre-deploy-${{ inputs.world_name }}-${{ github.run_id }}
+        path: world-backup.tar.gz
+        retention-days: 90
+
+    - name: Set artifact name output
+      if: steps.download.outcome == 'success'
+      shell: bash
+      run: echo "artifact_name=pre-deploy-${{ inputs.world_name }}-${{ github.run_id }}" >> $GITHUB_OUTPUT
