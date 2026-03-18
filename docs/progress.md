@@ -49,3 +49,32 @@
 ### Status
 
 Pushed to `origin/world-switch/panthera`. Ready for PR to `main`.
+
+---
+
+## 2026-03-18: Documentation updates for world management and artifact naming
+
+**Branch:** `docs/world-management`
+**Commit:** `ee164b2` — "Inscribe the world-walker's guide — document realm management and mend stale runes"
+
+### Context
+
+After the `world-switch/panthera` changes (commit `fb0e7ee`), documentation had stale artifact naming references and the upload-world script had no user-facing docs. This session fixed both.
+
+### Changes
+
+| File | Change |
+|---|---|
+| `docs/world-management.md` | **New file.** Documents upload-world script usage, world file locations, switching workflow (edit `main.tf` → PR → merge), and full end-to-end example |
+| `docs/backups.md` | Fixed stale artifact naming — replaced `valheim-world-MyWorld-20260316-1253` with `{prefix}-{short_sha}-{timestamp}` pattern |
+| `.github/workflows/restore-backup.yml` | Updated example artifact name in `workflow_dispatch` input description to match new pattern |
+| `docs/getting-started.md` | Added "Next steps" section linking to world-management.md, backups.md, and github-actions.md |
+
+### Key design decisions
+
+1. **Standalone doc over inline section**: World management is a distinct operational workflow, so it got its own `docs/world-management.md` rather than a section in `getting-started.md`.
+2. **Cross-linked from getting-started**: Added a "Next steps" section at the bottom of `getting-started.md` pointing to world management, backups, and GitHub Actions docs.
+
+### Status
+
+Pushed to `origin/docs/world-management`. Ready for PR to `main`.

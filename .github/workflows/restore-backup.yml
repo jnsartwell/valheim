@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       artifact_name:
-        description: 'Artifact name to restore (e.g. valheim-world-MyWorld-20260316-1253)'
+        description: 'Artifact name to restore (e.g. snapshot-abc1234-20260316-1253)'
         required: true
 
 env:

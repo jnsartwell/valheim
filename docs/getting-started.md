@@ -90,5 +90,6 @@ See also: [Hetzner](hetzner.md) for server types and volume details.
 
 ## Next steps
 
+- [World Management](world-management.md) — upload new worlds and switch between them
 - [Backups](backups.md) — automatic and manual backup options
 - [GitHub Actions](github-actions.md) — CI/CD workflows for PR-based deploys
