@@ -30,7 +30,7 @@ module "valheim" {
   allowed_ssh_ips = var.allowed_ssh_ips
 
   valheim_server_name = var.valheim_server_name
-  valheim_world_name  = "Panthera"
+  valheim_world_name  = "Cheeeeee"
   valheim_server_pass = var.valheim_server_pass
   valheim_admin_ids   = var.valheim_admin_ids
   discord_webhook_url = var.discord_webhook_url
