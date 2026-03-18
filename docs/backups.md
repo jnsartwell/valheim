@@ -37,12 +37,4 @@ Artifact names include the world name and timestamp: `valheim-world-MyWorld-2026
 
 Restores a named GitHub artifact to the server. If you provide a wrong name, the workflow lists available artifacts.
 
-### World: Import from Release
-
-Imports an external world save from a GitHub Release. Upload a `.tar.gz` containing `.db` and `.fwl` files as a release asset. The workflow:
-
-1. Downloads and validates the archive
-2. Auto-renames world files to match the configured `WORLD_NAME`
-3. Clears texture caches (world-specific)
-
-Archive format: a flat tarball with `<WorldName>.db` and `<WorldName>.fwl` at root (no directory wrapper).
+Note: Restoring a backup overwrites matching world files but preserves other worlds on the volume (multi-world safe).

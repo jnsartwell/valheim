@@ -48,7 +48,7 @@ See **[Getting Started](docs/getting-started.md)** for the full walkthrough.
 | [Hetzner](docs/hetzner.md) | Server types, volumes, locations, SSH access |
 | [Cloudflare DNS](docs/cloudflare-dns.md) | Optional hostname with Cloudflare |
 | [Discord Notifications](docs/discord.md) | Optional Discord webhook alerts |
-| [Backups](docs/backups.md) | Automatic backups, manual snapshots, restore, world import |
+| [Backups](docs/backups.md) | Automatic backups, manual snapshots, restore |
 | [GitHub Actions](docs/github-actions.md) | CI/CD workflows, secrets, and environment setup |
 | [Cloud-Init](docs/cloud-init.md) | How server bootstrapping works, template escaping rules |
 

@@ -37,7 +37,6 @@ For emergencies, **Manual Deploy** is available via `workflow_dispatch` with env
 |---|---|---|
 | **Backup: Snapshot** | Manual / daily 6am UTC | Triggers backup on server, downloads as artifact (90-day retention). |
 | **Backup: Restore** | Manual | Restores a named artifact to the server. Lists available on failure. |
-| **World: Import from Release** | Manual | Imports world save from a GitHub Release. Validates, renames, clears caches. Requires `infra` approval. |
 
 ## Setup
 
@@ -47,7 +46,7 @@ Create an `infra` environment for deployment gates:
 
 **Repo → Settings → Environments → New environment** → name it `infra`
 
-Under **Deployment protection rules**, enable **Required reviewers** and add yourself. This gates Manual Deploy and World Import behind approval.
+Under **Deployment protection rules**, enable **Required reviewers** and add yourself. This gates Manual Deploy behind approval.
 
 ### 2. Secrets
 
@@ -58,7 +57,7 @@ Under **Deployment protection rules**, enable **Required reviewers** and add you
 | `TF_TOKEN_APP_TERRAFORM_IO` | Plan, Deploy, Destroy | Terraform Cloud authentication |
 | `HCLOUD_TOKEN` | Plan, Deploy, Destroy, Power On/Off, Status | Hetzner API |
 | `SSH_PUBLIC_KEY` | Plan, Deploy | Registered with Hetzner at server creation |
-| `SSH_PRIVATE_KEY` | Deploy, Backup, Restore, Import, Restart, Status, Power Off | SSH into server for operational tasks |
+| `SSH_PRIVATE_KEY` | Deploy, Backup, Restore, Restart, Status, Power Off | SSH into server for operational tasks |
 | `SERVER_PASS` | Plan, Deploy | Valheim server password |
 | `CLOUDFLARE_API_TOKEN` | Plan, Deploy | Cloudflare DNS (only if using Cloudflare) |
 | `DISCORD_WEBHOOK_URL` | Deploy | Discord notifications (only if using Discord) |
@@ -70,8 +69,8 @@ Under **Deployment protection rules**, enable **Required reviewers** and add you
 | Variable | Used by | Purpose |
 |---|---|---|
 | `SERVER_NAME` | Plan, Deploy | Server name in the game browser |
-| `WORLD_NAME` | Plan, Deploy, Backup, Import | World save file name |
-| `SERVER_HOST` | Backup, Restore, Import, Restart, Status, Power Off | Hostname or IP for SSH access |
+| `WORLD_NAME` | Plan, Deploy, Backup | World save file name |
+| `SERVER_HOST` | Backup, Restore, Restart, Status, Power Off | Hostname or IP for SSH access |
 | `CLOUDFLARE_ZONE_ID` | Plan, Deploy | Cloudflare zone ID (leave empty to skip DNS) |
 | `VALHEIM_ADMIN_IDS` | Plan, Deploy | Steam 64-bit IDs as JSON array (e.g. `["765..."]`) |
 
@@ -86,4 +85,4 @@ The workflows use Terraform Cloud for remote state:
 
 ## Operational workflows and SSH
 
-Backup, restore, import, restart, and status workflows connect directly to the server via SSH. They don't use Terraform — only plan, deploy, and destroy workflows need Terraform Cloud. This keeps operational workflows fast.
+Backup, restore, restart, and status workflows connect directly to the server via SSH. They don't use Terraform — only plan, deploy, and destroy workflows need Terraform Cloud. This keeps operational workflows fast.

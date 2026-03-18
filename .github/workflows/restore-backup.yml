@@ -53,8 +53,7 @@ jobs:
           scp restore/world-backup.tar.gz root@${{ env.SERVER_HOST }}:/tmp/world-restore.tar.gz
           ssh root@${{ env.SERVER_HOST }} "
             cd /mnt/valheim-world
-            rm -rf worlds_local
-            tar -xzf /tmp/world-restore.tar.gz
+            tar -xzf /tmp/world-restore.tar.gz --overwrite
             rm /tmp/world-restore.tar.gz
             echo 'Restore complete.'
           "
