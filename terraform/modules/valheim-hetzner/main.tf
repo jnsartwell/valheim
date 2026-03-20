@@ -76,7 +76,7 @@ resource "hcloud_server" "valheim" {
 
   provisioner "remote-exec" {
     inline = [
-      "set -euo pipefail",
+      "set -eu",
       "echo 'Setting script permissions...'",
       "chmod +x /opt/valheim/scripts/*.sh",
       "echo 'Starting Docker Compose...'",
