@@ -87,10 +87,6 @@ jobs:
       - name: Terraform Apply
         run: terraform apply tfplan
 
-      - name: Get new server IP
-        id: new-server
-        run: echo "ip=$(terraform output -raw server_ip)" >> $GITHUB_OUTPUT
-
       - name: Restore world data
         id: restore
         if: steps.backup.outputs.artifact_name != ''
@@ -98,8 +94,12 @@ jobs:
         continue-on-error: true
         with:
           artifact_name: ${{ steps.backup.outputs.artifact_name }}
-          server_host: ${{ steps.new-server.outputs.ip }}
+          server_host: ${{ vars.SERVER_HOST }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Ensure container is running
+        run: |
+          ssh root@${{ vars.SERVER_HOST }} "/opt/valheim/scripts/start.sh"
 
       - name: Write job summary
         run: |
