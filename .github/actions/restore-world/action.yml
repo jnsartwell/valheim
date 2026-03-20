@@ -38,7 +38,7 @@ runs:
       run: |
         scp restore-tmp/world-backup.tar.gz root@${{ inputs.server_host }}:/tmp/world-backup.tar.gz
         ssh root@${{ inputs.server_host }} \
-          "tar -xzf /tmp/world-backup.tar.gz -C /opt/valheim/data/ && rm /tmp/world-backup.tar.gz"
+          "mkdir -p /opt/valheim/data/worlds_local && tar -xzf /tmp/world-backup.tar.gz -C /opt/valheim/data/worlds_local/ && rm /tmp/world-backup.tar.gz"
 
     - name: Start container
       shell: bash
