@@ -64,13 +64,14 @@ resource "hcloud_server" "valheim" {
 
   provisioner "remote-exec" {
     inline = [
-      "cloud-init status --wait; rc=$?; echo \"cloud-init exited with code $rc\"; cloud-init status --long; if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then echo 'cloud-init failed — dumping logs:'; cat /var/log/cloud-init-output.log; exit $rc; fi"
+      "cloud-init status --wait; rc=$?; echo \"cloud-init exited with code $rc\"; cloud-init status --long; if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then echo 'cloud-init failed — dumping logs:'; cat /var/log/cloud-init-output.log; exit $rc; fi",
+      "mkdir -p /opt/valheim/scripts"
     ]
   }
 
   provisioner "file" {
     source      = "${path.root}/server-scripts/"
-    destination = "/opt/valheim/scripts/"
+    destination = "/opt/valheim/scripts"
   }
 
   provisioner "remote-exec" {
