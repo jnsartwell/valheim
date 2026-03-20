@@ -1,6 +1,6 @@
 # Getting Started
 
-Deploy a Valheim dedicated server on Hetzner Cloud with a single `terraform apply`. World data persists on a block volume so you can rebuild the server without losing progress.
+Deploy a Valheim dedicated server on Hetzner Cloud with a single `terraform apply`.
 
 ## Prerequisites
 
@@ -32,8 +32,9 @@ terraform {
 Create a `terraform.tfvars` file:
 
 ```hcl
-hcloud_token   = "your-hetzner-api-token"
-ssh_public_key = "ssh-ed25519 AAAA..."
+hcloud_token        = "your-hetzner-api-token"
+ssh_public_key      = "ssh-ed25519 AAAA..."
+ssh_private_key     = "-----BEGIN OPENSSH PRIVATE KEY-----\n..."
 valheim_server_pass = "your-server-password"  # min 5 characters
 ```
 
@@ -47,7 +48,7 @@ terraform plan
 terraform apply
 ```
 
-Terraform creates a Hetzner server running the [lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker) Docker image with a persistent block volume for world data.
+Terraform creates a Hetzner server running the [lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker) Docker image. World data is stored on the server's local disk at `/opt/valheim/data`.
 
 ### 5. Connect
 
@@ -75,21 +76,21 @@ Get notified in a Discord channel when the server comes online or goes offline. 
 |---|---|---|---|
 | `hcloud_token` | Yes | — | Hetzner Cloud API token |
 | `ssh_public_key` | Yes | — | SSH public key to authorize on the server |
+| `ssh_private_key` | Yes | — | SSH private key for provisioner connections |
 | `valheim_server_pass` | Yes | — | Valheim server password (min 5 characters) |
 | `name` | No | `valheim` | Base name for Hetzner resources |
 | `location` | No | `ash` | Hetzner datacenter location |
 | `server_type` | No | `cpx31` | Hetzner server type |
-| `volume_size` | No | `10` | Persistent volume size in GB |
 | `valheim_server_name` | No | `Valheim Server` | Name shown in the in-game server browser |
 | `valheim_world_name` | No | `Midgard` | World save file name (hardcoded in `main.tf` for world switching) |
 | `valheim_admin_ids` | No | `[]` | Steam 64-bit IDs of server admins |
 | `allowed_ssh_ips` | No | `["0.0.0.0/0", "::/0"]` | IP ranges allowed to SSH in |
 | `discord_webhook_url` | No | `""` | Discord webhook URL (enables notifications) |
 
-See also: [Hetzner](hetzner.md) for server types and volume details.
+See also: [Hetzner](hetzner.md) for server types.
 
 ## Next steps
 
 - [World Management](world-management.md) — upload new worlds and switch between them
-- [Backups](backups.md) — automatic and manual backup options
+- [Backups](backups.md) — backup options and restore procedures
 - [GitHub Actions](github-actions.md) — CI/CD workflows for PR-based deploys

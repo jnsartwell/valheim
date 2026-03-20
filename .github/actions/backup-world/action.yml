@@ -46,7 +46,7 @@ runs:
       continue-on-error: true
       run: |
         LATEST=$(ssh root@${{ inputs.server_host }} \
-          "ls -t /mnt/valheim-world/backups/world_*.tar.gz 2>/dev/null | head -1")
+          "ls -t /opt/valheim/data/backups/world_*.tar.gz 2>/dev/null | head -1")
         if [ -z "$LATEST" ]; then
           echo "No backups found"
           exit 1
@@ -61,6 +61,17 @@ runs:
         name: ${{ inputs.artifact_prefix }}-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.timestamp }}
         path: world-backup.tar.gz
         retention-days: 90
+
+    - name: Clean up backup on server
+      if: steps.download.outcome == 'success'
+      shell: bash
+      continue-on-error: true
+      run: |
+        LATEST=$(ssh root@${{ inputs.server_host }} \
+          "ls -t /opt/valheim/data/backups/world_*.tar.gz 2>/dev/null | head -1")
+        if [ -n "$LATEST" ]; then
+          ssh root@${{ inputs.server_host }} "rm \"$LATEST\""
+        fi
 
     - name: Set artifact name output
       id: set-output

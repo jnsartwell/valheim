@@ -23,7 +23,7 @@ variable "subdomain" {
 
 
 variable "name" {
-  description = "Base name for Hetzner resources (server, volume, firewall, SSH key)"
+  description = "Base name for Hetzner resources (server, firewall, SSH key)"
   type        = string
   default     = "valheim"
 }
@@ -40,10 +40,10 @@ variable "server_type" {
   default     = "cpx31"
 }
 
-variable "volume_size" {
-  description = "Size of the persistent world volume in GB"
-  type        = number
-  default     = 10
+variable "ssh_private_key" {
+  description = "SSH private key for provisioner connections"
+  type        = string
+  sensitive   = true
 }
 
 variable "ssh_public_key" {

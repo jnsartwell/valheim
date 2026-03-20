@@ -18,9 +18,9 @@ For emergencies, **Manual Deploy** is available via `workflow_dispatch` with env
 | Workflow | Trigger | What it does |
 |---|---|---|
 | **Terraform Plan** | PR targeting `main` | Runs `terraform plan`, posts diff to the job summary |
-| **Deploy Valheim Server** | Merge to `main` | Runs `terraform apply`. Volume and world data persist. |
+| **Deploy Valheim Server** | Merge to `main` | Runs `terraform apply`. Takes pre-deploy backup. |
 | **Manual Deploy Valheim Server** | Manual | Force deploy outside PR flow. Requires `infra` environment approval. |
-| **Destroy Valheim Server** | Manual | `terraform destroy` — wipes everything including volume. Type `DESTROY` to confirm. |
+| **Destroy Valheim Server** | Manual | `terraform destroy` — wipes everything. Type `DESTROY` to confirm. |
 
 ### Operations
 

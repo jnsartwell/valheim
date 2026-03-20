@@ -35,8 +35,8 @@ module "valheim" {
   valheim_admin_ids   = var.valheim_admin_ids
   discord_webhook_url = var.discord_webhook_url
 
-  server_type = var.server_type
-  volume_size = var.volume_size
+  server_type     = var.server_type
+  ssh_private_key = var.ssh_private_key
 }
 
 # Cloudflare DNS — optional, remove this block and the cloudflare provider to skip DNS
