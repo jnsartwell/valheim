@@ -17,5 +17,5 @@ BACKUP_FILE="${BACKUP_DIR}/world_${TIMESTAMP}.tar.gz"
 
 mkdir -p "$BACKUP_DIR"
 echo "[backup] Backing up world '$WORLD_NAME' at $TIMESTAMP"
-tar -czf "$BACKUP_FILE" -C "$WORLD_DIR" $(find "$WORLD_DIR/worlds_local" -maxdepth 1 -name "${WORLD_NAME}.*" -printf "worlds_local/%f\n")
+tar -czf "$BACKUP_FILE" -C "$WORLD_DIR/worlds_local" $(find "$WORLD_DIR/worlds_local" -maxdepth 1 -name "${WORLD_NAME}.*" -printf "%f\n")
 echo "[backup] Written to $BACKUP_FILE"
