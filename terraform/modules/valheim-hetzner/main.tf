@@ -32,14 +32,6 @@ resource "hcloud_firewall" "valheim" {
   }
 }
 
-# Block volume for world persistence
-resource "hcloud_volume" "world" {
-  name     = "${var.name}-world"
-  size     = var.volume_size
-  location = var.location
-  format   = "ext4"
-}
-
 # Server
 resource "hcloud_server" "valheim" {
   name        = var.name
@@ -56,18 +48,33 @@ resource "hcloud_server" "valheim" {
   firewall_ids = [hcloud_firewall.valheim.id]
 
   user_data = templatefile("${path.module}/cloud-init.yaml", {
-    volume_device       = hcloud_volume.world.linux_device
     valheim_server_name = var.valheim_server_name
     valheim_world_name  = var.valheim_world_name
     valheim_server_pass = var.valheim_server_pass
     valheim_admin_ids   = var.valheim_admin_ids
     discord_webhook_url = var.discord_webhook_url
   })
-}
 
-# Attach volume to server
-resource "hcloud_volume_attachment" "world" {
-  volume_id = hcloud_volume.world.id
-  server_id = hcloud_server.valheim.id
-  automount = false
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = var.ssh_private_key
+    host        = self.ipv4_address
+  }
+
+  provisioner "remote-exec" {
+    inline = ["cloud-init status --wait"]
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/server-scripts/"
+    destination = "/opt/valheim/scripts/"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /opt/valheim/scripts/*.sh",
+      "docker compose -f /opt/valheim/scripts/compose.yaml --env-file /opt/valheim/docker/.env up -d"
+    ]
+  }
 }

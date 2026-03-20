@@ -1,24 +1,16 @@
 #cloud-config
 
 runcmd:
-  # Mount world volume (wait for device to appear after Terraform attaches it)
-  - until [ -b "${volume_device}" ]; do sleep 2; done
-  - mkdir -p /mnt/valheim-world
-  - mount -o noatime ${volume_device} /mnt/valheim-world
-  - echo "${volume_device} /mnt/valheim-world ext4 defaults,noatime,nofail 0 2" >> /etc/fstab
-
   # Kernel tuning — protect game memory from being swapped when additional services run
   - sysctl -w vm.swappiness=10
   - echo "vm.swappiness=10" >> /etc/sysctl.conf
 
-  # Write admin list
-  - truncate -s 0 /mnt/valheim-world/adminlist.txt
+  # Create data directory and write admin list
+  - mkdir -p /opt/valheim/data
+  - truncate -s 0 /opt/valheim/data/adminlist.txt
 %{ for id in valheim_admin_ids ~}
-  - echo "${id}" >> /mnt/valheim-world/adminlist.txt
+  - echo "${id}" >> /opt/valheim/data/adminlist.txt
 %{ endfor ~}
-
-  # Start Valheim
-  - docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env up -d
 
 write_files:
   - path: /opt/valheim/docker/.env
@@ -29,66 +21,3 @@ write_files:
       SERVER_PASS=${valheim_server_pass}
       SERVER_PUBLIC=true
       DISCORD_WEBHOOK_URL=${discord_webhook_url}
-
-  - path: /opt/valheim/docker/compose.yaml
-    content: |
-      services:
-        valheim:
-          image: lloesche/valheim-server
-          container_name: valheim
-          restart: always
-          network_mode: host
-          environment:
-            SERVER_NAME: $${SERVER_NAME}
-            SERVER_PORT: 2456
-            WORLD_NAME: $${WORLD_NAME}
-            SERVER_PASS: $${SERVER_PASS}
-            SERVER_PUBLIC: $${SERVER_PUBLIC:-true}
-            UPDATE_CRON: "0 4 * * *"
-            IDLE_DATAGRAM_MAX_COUNT: "0"
-            BACKUPS: "true"
-            BACKUPS_CRON: "0 */6 * * *"
-            BACKUPS_DIRECTORY: /config/backups
-            BACKUPS_MAX_AGE: "7"
-            POST_SERVER_LISTENING_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"$${SERVER_NAME} is online! Connect now.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
-            PRE_SERVER_SHUTDOWN_HOOK: "[ -n \"$${DISCORD_WEBHOOK_URL}\" ] && curl -sfSL -X POST -H 'Content-Type: application/json' -d '{\"content\":\"$${SERVER_NAME} is going offline.\"}' \"$${DISCORD_WEBHOOK_URL}\" || true"
-          volumes:
-            - /mnt/valheim-world:/config
-          cap_add:
-            - sys_nice
-          stop_grace_period: 60s
-
-  - path: /opt/valheim/scripts/start.sh
-    permissions: "0755"
-    content: |
-      #!/usr/bin/env bash
-      set -euo pipefail
-      echo "[start] Bringing up Valheim server..."
-      docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env up -d
-      echo "[start] Done. Check logs with: docker logs -f valheim"
-
-  - path: /opt/valheim/scripts/stop.sh
-    permissions: "0755"
-    content: |
-      #!/usr/bin/env bash
-      set -euo pipefail
-      echo "[stop] Stopping Valheim server (graceful, 60s timeout)..."
-      docker compose -f /opt/valheim/docker/compose.yaml --env-file /opt/valheim/docker/.env stop
-      echo "[stop] Server stopped."
-
-  - path: /opt/valheim/scripts/backup.sh
-    permissions: "0755"
-    content: |
-      #!/usr/bin/env bash
-      set -euo pipefail
-      WORLD_DIR="/mnt/valheim-world"
-      BACKUP_DIR="/mnt/valheim-world/backups"
-      RETENTION_DAYS=7
-      TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-      BACKUP_FILE="$${BACKUP_DIR}/world_$${TIMESTAMP}.tar.gz"
-      mkdir -p "$${BACKUP_DIR}"
-      echo "[backup] Starting world backup at $${TIMESTAMP}"
-      tar -czf "$${BACKUP_FILE}" --exclude="$${BACKUP_DIR}" -C "$${WORLD_DIR}" worlds_local
-      echo "[backup] Written to $${BACKUP_FILE}"
-      find "$${BACKUP_DIR}" -name "world_*.tar.gz" -mtime "+$${RETENTION_DAYS}" -delete
-      echo "[backup] Pruned backups older than $${RETENTION_DAYS} days"

@@ -1,6 +1,6 @@
 # World Management
 
-Multiple world saves coexist on the server's persistent volume under `/mnt/valheim-world/worlds_local/`. Terraform controls which world is active.
+Multiple world saves coexist on the server under `/opt/valheim/data/worlds_local/`. Terraform controls which world is active.
 
 ## Uploading a new world
 
@@ -32,7 +32,7 @@ The active world is set by `valheim_world_name` in `terraform/main.tf` (line 33)
 2. Open a PR on a `world-switch/<name>` branch
 3. Merge to `main` — the deploy writes the new name to `.env` and the container restarts with that world
 
-The previous world's files remain on the volume and can be switched back to at any time.
+The previous world's files remain on the server and can be switched back to at any time.
 
 ## Full workflow: adding and activating a new world
 
@@ -46,5 +46,6 @@ The previous world's files remain on the volume and can be switched back to at a
 ## Notes
 
 - Uploading a world does **not** activate it — the Terraform deploy does.
-- World files on the volume are never deleted by switching. All worlds persist.
+- World files on the server are never deleted by switching. All worlds persist.
 - The server must be running and reachable via SSH for the upload script to work.
+- Server recreates wipe local data — take a backup before any deploy that triggers a rebuild.

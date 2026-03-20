@@ -30,6 +30,7 @@ jobs:
       TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       TF_VAR_cloudflare_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
 
     steps:
       - name: Checkout

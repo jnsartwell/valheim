@@ -1,0 +1,46 @@
+name: Restore World
+description: Download a backup artifact and restore world data to the server
+
+inputs:
+  artifact_name:
+    description: Name of the backup artifact from this workflow run
+    required: true
+  server_host:
+    description: Server IP address (use terraform output, not DNS)
+    required: true
+  ssh_private_key:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download backup artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: restore-tmp
+
+    - name: Setup SSH
+      uses: ./.github/actions/setup-ssh
+      with:
+        ssh_private_key: ${{ inputs.ssh_private_key }}
+        server_host: ${{ inputs.server_host }}
+
+    - name: Stop container
+      shell: bash
+      continue-on-error: true
+      run: |
+        ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no root@${{ inputs.server_host }} \
+          "/opt/valheim/scripts/stop.sh"
+
+    - name: Upload and extract backup
+      shell: bash
+      run: |
+        scp restore-tmp/world-backup.tar.gz root@${{ inputs.server_host }}:/tmp/world-backup.tar.gz
+        ssh root@${{ inputs.server_host }} \
+          "tar -xzf /tmp/world-backup.tar.gz -C /opt/valheim/data/ && rm /tmp/world-backup.tar.gz"
+
+    - name: Start container
+      shell: bash
+      run: |
+        ssh root@${{ inputs.server_host }} "/opt/valheim/scripts/start.sh"

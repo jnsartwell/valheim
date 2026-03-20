@@ -2,8 +2,7 @@
 
 The Valheim module creates these Hetzner resources:
 
-- **Server** — runs the Valheim Docker container via cloud-init
-- **Block volume** — persistent storage for world data, mounted at `/mnt/valheim-world`
+- **Server** — runs the Valheim Docker container via cloud-init and file provisioner
 - **Firewall** — allows UDP 2456-2458 (Valheim) from anywhere, SSH from configurable IPs
 - **SSH key** — registered with Hetzner for server access
 
@@ -17,7 +16,7 @@ The default is `cpx31` (4 vCPU, 8 GB RAM, ~$18/mo). Valheim needs at least 4 GB 
 | `cpx31` | 4 | 8 GB | ~$18/mo | Recommended for most servers |
 | `cpx41` | 8 | 16 GB | ~$33/mo | Large worlds or high player counts |
 
-Change the server type by setting the `server_type` variable. Changing server type triggers a server rebuild — the volume persists so world data is safe.
+Change the server type by setting the `server_type` variable. Changing server type triggers a server rebuild — take a backup first (the deploy workflow does this automatically).
 
 ## Locations
 
@@ -31,22 +30,20 @@ Hetzner datacenters:
 | `nbg1` | Nuremberg, Germany |
 | `hel1` | Helsinki, Finland |
 
-Set via the `location` variable. The volume is created in the same location as the server.
+Set via the `location` variable.
 
-## Block volume
+## Data directory
 
-The volume (`valheim-world`) stores all world data, backups, and server config. It persists independently of the server — rebuilding or destroying the server does not touch the volume unless you run `terraform destroy`.
-
-Default size is 10 GB, which is plenty for world saves and local backups. Increase with the `volume_size` variable in your `terraform.tfvars`.
-
-Layout on the volume:
+World data is stored on the server's local disk at `/opt/valheim/data`:
 
 ```
-/mnt/valheim-world/
+/opt/valheim/data/
 ├── worlds_local/          # World save files (.db, .fwl)
-├── backups/               # Automatic backup archives
+├── backups/               # On-demand backup archives
 └── adminlist.txt          # Server admin Steam IDs
 ```
+
+Since this is local storage (not a persistent volume), server recreates wipe game data. The deploy workflow takes a pre-deploy backup artifact automatically. Use the Restore workflow to recover after a recreate.
 
 ## SSH access
 
@@ -62,9 +59,12 @@ By default, SSH is open to all IPs (for GitHub Actions compatibility). Restrict 
 allowed_ssh_ips = ["203.0.113.0/24"]
 ```
 
-## Cloud-init
+## Cloud-init and provisioners
 
-The server is bootstrapped by cloud-init on first boot. It mounts the volume, writes Docker Compose and helper scripts, and starts the container. The Hetzner `docker-ce` image reboots once after initial cloud-init — the container's `restart: always` policy handles this automatically.
+The server is bootstrapped in two phases:
+
+1. **Cloud-init** (first boot) — tunes kernel settings, writes the `.env` file, and creates the data directory with the admin list
+2. **File provisioner** (after cloud-init completes) — copies scripts and compose file from `terraform/server-scripts/` to `/opt/valheim/scripts/`, then starts the container
 
 Helper scripts on the server:
 
@@ -72,6 +72,6 @@ Helper scripts on the server:
 |---|---|
 | `/opt/valheim/scripts/start.sh` | Start the container |
 | `/opt/valheim/scripts/stop.sh` | Graceful stop (60s timeout) |
-| `/opt/valheim/scripts/backup.sh` | On-demand backup to volume |
+| `/opt/valheim/scripts/backup.sh` | On-demand backup of active world |
 
 For details on how cloud-init templating works, see [Cloud-Init](cloud-init.md).

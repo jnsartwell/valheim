@@ -13,6 +13,12 @@ variable "ssh_public_key" {
   type        = string
 }
 
+variable "ssh_private_key" {
+  description = "SSH private key for provisioner connections"
+  type        = string
+  sensitive   = true
+}
+
 variable "allowed_ssh_ips" {
   description = "IP ranges allowed to SSH into the server"
   type        = list(string)
@@ -49,9 +55,3 @@ variable "server_type" {
   description = "Hetzner server type (e.g. 'cpx31', 'cpx41')"
   type        = string
 }
-
-variable "volume_size" {
-  description = "Size of the persistent world volume in GB"
-  type        = number
-}
-

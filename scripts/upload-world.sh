@@ -59,7 +59,7 @@ if [[ "$DB_NAME" != "$FWL_NAME" ]]; then
 fi
 
 WORLD_NAME="$DB_NAME"
-DEST="/mnt/valheim-world/worlds_local"
+DEST="/opt/valheim/data/worlds_local"
 
 echo "Uploading world '$WORLD_NAME' to $HOST..."
 scp "$DB_PATH" "$FWL_PATH" "root@${HOST}:${DEST}/"

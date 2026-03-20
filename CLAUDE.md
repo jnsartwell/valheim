@@ -2,12 +2,12 @@
 
 ## Project summary
 
-IaC repo for a self-hosted Valheim dedicated server on Hetzner Cloud. Terraform provisions the server; cloud-init configures everything; GitHub Actions handles CI/CD and operations. The game server runs via the `lloesche/valheim-server` Docker image.
+IaC repo for a self-hosted Valheim dedicated server on Hetzner Cloud. Terraform provisions the server; cloud-init + file provisioner configures everything; GitHub Actions handles CI/CD and operations. The game server runs via the `lloesche/valheim-server` Docker image.
 
 ## Tech stack
 
 - **Provisioning:** Terraform (>= 1.9) with Hetzner (`hcloud`) and Cloudflare providers
-- **Server config:** Cloud-init (YAML) writing Docker Compose, `.env`, and shell scripts
+- **Server config:** Cloud-init (YAML) for `.env` and kernel tuning; file provisioner for scripts and compose
 - **Container:** `lloesche/valheim-server` (Docker Compose, `restart: always`)
 - **CI/CD:** GitHub Actions — plan on PR, apply on merge, manual operational workflows
 - **State:** Terraform Cloud (org: jnsartwell, workspace: valheim, execution mode: **Local**)
@@ -16,21 +16,23 @@ IaC repo for a self-hosted Valheim dedicated server on Hetzner Cloud. Terraform 
 
 ## Architecture
 
-All server config (scripts, compose file, .env) is written through `terraform/modules/valheim-hetzner/cloud-init.yaml` using Terraform's `templatefile()`. Cloud-init is the single source of truth for what ends up on the server.
+Server config is split between cloud-init (`.env`, kernel tuning, admin list) and the file provisioner (scripts + compose from `terraform/server-scripts/`). Cloud-init runs first; the provisioner waits for it, copies files, then starts the container.
 
 Two Terraform modules:
-- `modules/valheim-hetzner` — server, volume, firewall, SSH key, cloud-init
+- `modules/valheim-hetzner` — server, firewall, SSH key, cloud-init, file provisioner
 - `modules/cloudflare-dns` — optional A record; no coupling to the valheim module
 
 ## Critical: Terraform template escaping in cloud-init.yaml
 
-`cloud-init.yaml` is processed by `templatefile()`, so `${...}` is a Terraform variable. Bash variables must use `$${...}` to escape (e.g. `$${BACKUP_DIR}`, `$${TIMESTAMP}`). Docker Compose substitution vars also use `$${...}`: `$${SERVER_NAME}`, `$${SERVER_PASS}`, etc.
+`cloud-init.yaml` is processed by `templatefile()`, so `${...}` is a Terraform variable. Bash variables must use `$${...}` to escape.
 
-Terraform template variables use normal `${...}`: `${volume_device}`, `${valheim_server_name}`, `${valheim_world_name}`, `${valheim_server_pass}`.
+Terraform template variables use normal `${...}`: `${valheim_server_name}`, `${valheim_world_name}`, `${valheim_server_pass}`.
 
-## Block volume
+Note: Scripts in `terraform/server-scripts/` are NOT processed by `templatefile()` — they use normal `${VAR}` syntax (read from `.env` at runtime).
 
-The volume (`valheim-world`) persists world saves across server recreate cycles. Mounted at `/mnt/valheim-world`. The Hetzner docker-ce image reboots after first cloud-init run — `restart: always` on the container handles this.
+## Data storage
+
+World data lives on the server's local disk at `/opt/valheim/data`. No persistent block volume — server recreates wipe game data. The deploy workflow takes a pre-deploy backup artifact automatically; use the Restore workflow to recover after a recreate.
 
 ## Development flow
 
@@ -44,9 +46,9 @@ Repository admins can self-merge without reviewer approval.
 
 ## Deploy vs Destroy
 
-- **Deploy** (merge to main) = `terraform apply`. Volume persists. World data is safe.
+- **Deploy** (merge to main) = `terraform apply`. Pre-deploy backup taken automatically.
 - **Manual Deploy** (workflow_dispatch) = force deploy, gated by `infra` approval.
-- **Destroy** = `terraform destroy`. Wipes everything including volume. Permanent shutdown only.
+- **Destroy** = `terraform destroy`. Wipes everything. Permanent shutdown only.
 
 ## GitHub Secrets and Variables
 
@@ -54,13 +56,13 @@ Full tables with per-workflow usage are in `docs/github-actions.md`. Key secrets
 
 ## Backups
 
-Automatic backups via `lloesche/valheim-server` (`BACKUPS=true`, every 6 hours, 7-day retention). On-demand backups via `backup.sh` triggered by the Backup: Snapshot workflow — tars `worlds_local/` directly.
+On-demand backups via `backup.sh` — backs up only the active world (reads `WORLD_NAME` from `.env`). Triggered by the Backup: Snapshot workflow, which downloads the archive as a GitHub artifact and cleans up the on-server file.
 
 ## World Switching
 
-Multiple world saves coexist on the volume under `/mnt/valheim-world/worlds_local/`. Terraform is the source of truth for which world is active via `valheim_world_name` in `terraform/main.tf`.
+Multiple world saves coexist under `/opt/valheim/data/worlds_local/`. Terraform is the source of truth for which world is active via `valheim_world_name` in `terraform/main.tf`.
 
-- **Upload a new world:** `./scripts/upload-world.sh --db <path> --fwl <path> --host <hostname>` (SCPs files directly to server volume)
+- **Upload a new world:** `./scripts/upload-world.sh --db <path> --fwl <path> --host <hostname>` (SCPs files directly to server)
 - **Switch worlds:** Change `valheim_world_name` in `terraform/main.tf` and deploy via PR. Server picks up the new name from `.env` on container restart.
 
 ## Operational workflows and SSH
@@ -80,4 +82,4 @@ Hook env vars (`POST_SERVER_LISTENING_HOOK`, `PRE_SERVER_SHUTDOWN_HOOK`) run `cu
 
 ## TODOs
 
-None currently tracked. The world-switching feature (replacing the old import-world workflow) is implemented but not yet committed.
+None currently tracked.
