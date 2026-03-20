@@ -63,7 +63,10 @@ resource "hcloud_server" "valheim" {
   }
 
   provisioner "remote-exec" {
-    inline = ["cloud-init status --wait"]
+    inline = [
+      "cloud-init status --wait || [ $? -eq 2 ]",
+      "cloud-init status --long"
+    ]
   }
 
   provisioner "file" {
