@@ -35,7 +35,7 @@ module "valheim" {
   valheim_admin_ids   = var.valheim_admin_ids
   discord_webhook_url = var.discord_webhook_url
 
-  server_type = var.server_type
+  server_type = "cpx21"
   volume_size = var.volume_size
 }
 
