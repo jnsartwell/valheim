@@ -37,6 +37,13 @@ module "valheim" {
 
   server_type = "cpx21"
   volume_size = var.volume_size
+
+  thunderstore_mods = {
+    Server_devcommands = {
+      namespace = "JereKuusela"
+      version   = "1.102.0"
+    }
+  }
 }
 
 # Cloudflare DNS — optional, remove this block and the cloudflare provider to skip DNS

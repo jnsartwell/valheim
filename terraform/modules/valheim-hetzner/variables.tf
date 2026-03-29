@@ -55,3 +55,12 @@ variable "volume_size" {
   type        = number
 }
 
+variable "thunderstore_mods" {
+  description = "Thunderstore BepInEx mods to install: map of package name to {namespace, version}"
+  type = map(object({
+    namespace = string
+    version   = string
+  }))
+  default = {}
+}
+

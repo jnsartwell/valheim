@@ -62,6 +62,7 @@ resource "hcloud_server" "valheim" {
     valheim_server_pass = var.valheim_server_pass
     valheim_admin_ids   = var.valheim_admin_ids
     discord_webhook_url = var.discord_webhook_url
+    thunderstore_mods   = var.thunderstore_mods
   })
 }
 
