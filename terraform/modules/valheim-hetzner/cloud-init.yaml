@@ -1,5 +1,8 @@
 #cloud-config
 
+packages:
+  - unzip
+
 runcmd:
   # Mount world volume (wait for device to appear after Terraform attaches it)
   - until [ -b "${volume_device}" ]; do sleep 2; done
@@ -15,6 +18,15 @@ runcmd:
   - truncate -s 0 /mnt/valheim-world/adminlist.txt
 %{ for id in valheim_admin_ids ~}
   - echo "${id}" >> /mnt/valheim-world/adminlist.txt
+%{ endfor ~}
+
+  # Install Thunderstore BepInEx mods
+  - mkdir -p /mnt/valheim-world/BepInEx/plugins
+%{ for name, mod in thunderstore_mods ~}
+  - echo "[mods] Installing ${name} v${mod.version} from Thunderstore..."
+  - curl -sfSL -o /tmp/${name}.zip "https://thunderstore.io/package/download/${mod.namespace}/${name}/${mod.version}/"
+  - unzip -o -j /tmp/${name}.zip "*.dll" -d /mnt/valheim-world/BepInEx/plugins/
+  - rm -f /tmp/${name}.zip
 %{ endfor ~}
 
   # Start Valheim
